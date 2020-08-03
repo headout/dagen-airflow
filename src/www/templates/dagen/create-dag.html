@@ -1,0 +1,113 @@
+{% extends base_template %}
+{% block page_title %}Create DAG
+{% endblock %}
+{%
+block head_css %}
+    {{ super() }}
+
+    <style>
+  body div.form-container {
+    padding: 15px;
+  }
+  .wrapper {
+    padding: 15px;
+  }
+
+  .action-btns {
+    text-align: right;
+  }
+</style>
+
+{% endblock %}
+{% block content %}
+    <h2>
+        Create DAG
+    </h2>
+    <hr/>
+
+    <div class="row">
+        <div class="container col-md-10" id="main-container">
+            <ul class="nav nav-tabs actions-nav">
+                <li>
+                    <a href="{{ url_for('DagenFABView.list') }}">List</a>
+                </li>
+                <li class="active">
+                    <a href="{{ url_for('DagenFABView.create') }}" title="Create New DAG">Create</a>
+                </li>
+            </ul>
+
+            <div class="wrapper admin-form form-horizontal">
+                <div class="form-group">
+                    <label class="col-md-2 control-label" for="template_id">
+                        Template ID &nbsp;<strong style="color: red;">*</strong>
+                    </label>
+                    <div class="col-md-10 form-field">
+                        <select class="form-control" id="template_id" name="template_id">
+                            <option disabled hidden {% if not template_id %} selected {% endif %} value="none">Select an Option</option>
+                            {% for tmplId, tmpl in template_classes.items() %}
+                                <option {% if template_id == tmplId %} selected {% endif %} value="{{ tmplId }}">{{ tmplId }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                {% for tmplId, form in forms.items() %}
+                    <form action="" class="admin-form form-horizontal tmpl-form" enctype="multipart/form-data" id="tmplForm_{{ tmplId }}" method="POST" role="form">
+                        <input type="hidden" name="template_id" value="{{ tmplId }}"/>
+                        {% if csrf_token %}
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        {% endif %}
+                        <div class="panel panel-default form-container">
+                            {% for field in form %}
+                                <div class="form-group">
+                                    <div class="col-md-10 form-field">
+                                        {{ field.label(_class="col-md-2 control-label") }}
+                                        {% if
+              field.flags.required %}&nbsp;<strong style="color: red;">*</strong>
+                                        {% endif %}
+                                        {{ field(class_="form-control") }}
+                                        {% if field.errors %}
+                                            {% for error in field.errors %}
+                                                <p class="error">{{ error }}</p>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <div style="clear: both;"></div>
+                        <hr/>
+                        <div class="form-group action-btns">
+                            <div class="col-md-offset-2 col-md-10 submit-row">
+                                <input class="btn btn-primary" id="save-btn" type="submit" value="Save"/>
+                                <input class="btn btn-default" id="save-add-btn" name="_add_another" type="submit" value="Save and Add Another"/>
+                                <input class="btn btn-default" id="save-edit-btn" name="_continue_editing" type="submit" value="Save and Continue Editing"/>
+                                <a href="{{ url_for('DagenFABView.list') }}" class="btn btn-danger" role="button">Cancel</a>
+                            </div>
+                        </div>
+                    </form>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block tail %}
+{{ super() }}
+{% block tail_extra_js %}
+<script>
+            function resetForms() {
+                $(".tmpl-form").hide();
+            }
+            $(document).ready(() => {
+                resetForms();
+                {% if template_id %}
+                    $("#tmplForm_{{ template_id }}").show();
+                {% endif %}
+                $("#template_id").change((event) => {
+                    let val = $(event.target).val();
+                    resetForms();
+                    $("#tmplForm_" + val).show();
+                });
+            });
+        </script>
+    {% endblock %}
+{% endblock %}

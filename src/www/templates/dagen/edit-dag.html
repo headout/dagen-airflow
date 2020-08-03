@@ -1,0 +1,109 @@
+{% extends base_template %}
+{% block page_title %}
+    Edit DAG -
+    {{ dag_id }}
+{%
+endblock %}
+{% block head_css %}
+    {{ super() }}
+
+    <style>
+  body div.form-container {
+    padding: 15px;
+  }
+  .action-btns {
+    text-align: right;
+  }
+</style>
+
+{% endblock %}
+{% block content %}
+    <h2>
+        Edit DAG -
+        {{ dag_id }}
+    </h2>
+    <hr/>
+
+    <div class="row">
+        <div class="container col-md-10" id="main-container">
+            <ul class="nav nav-tabs actions-nav">
+                <li>
+                    <a href="{{ url_for('DagenFABView.list') }}">List</a>
+                </li>
+                <li>
+                    <a href="{{ url_for('DagenFABView.detail', dag_id=dag_id) }}" title="View Details">View</a>
+                </li>
+                <li class="active">
+                    <a href="{{ url_for('DagenFABView.edit', dag_id=dag_id) }}" title="Edit Details">Edit</a>
+                </li>
+            </ul>
+
+            <div class="admin-form form-horizontal">
+                <form action="" class="admin-form form-horizontal" enctype="multipart/form-data" method="POST" role="form">
+                    {% if csrf_token %}
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    {% endif %}
+                    <div class="form-group">
+                        <label class="col-md-2 control-label" for="template_id">
+                            Template ID &nbsp;<strong style="color: red;">*</strong>
+                        </label>
+                        <div class="col-md-4 form-field">
+                            <select disabled value="{{ dbDag.template_id }}" class="form-control" id="template_id" name="template_id">
+                                <option selected value="{{ dbDag.template_id }}">{{ dbDag.template_id }}</option>
+                            </select>
+                        </div>
+                        <label class="col-md-1 control-label" for="live_version">
+                            Live Version &nbsp;<strong style="color: red;">*</strong>
+                        </label>
+                        <div class="col-md-4 form-field">
+                            <select {% if dbDag._live_version %} value="{{ dbDag._live_version }}" {% endif %} class="form-control" id="live_version" name="live_version">
+                                <option {% if not dbDag._live_version %} selected {% endif %} value="none">No Live Version</option>
+                                {% for versionNo in dagVersions %}
+                                    <option {% if dbDag._live_version == versionNo %} selected {% endif %} value="{{ versionNo }}">v{{ versionNo }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="panel panel-default form-container">
+                        {% for field in form %}
+                            <div class="form-group">
+                                <div class="col-md-10 form-field">
+                                    {{ field.label(_class="col-md-2 control-label") }}
+                                    {% if
+              field.flags.required %}&nbsp;<strong style="color: red;">*</strong>
+                                    {% endif %}
+                                    {{ field(class_="form-control conf-field") }}
+                                    {% if field.errors %}
+                                        {% for error in field.errors %}
+                                            <p class="error">{{ error }}</p>
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div style="clear: both;"></div>
+                    <hr/>
+                    <div class="form-group action-btns">
+                        <div class="col-md-offset-2 col-md-10 submit-row">
+                            <input class="btn btn-primary" id="save-btn" type="submit" value="Save"/>
+                            <input class="btn btn-default" id="save-add-btn" name="_add_another" type="submit" value="Save and Add Another"/>
+                            <input class="btn btn-default" id="save-edit-btn" name="_continue_editing" type="submit" value="Save and Continue Editing"/>
+                            <a href="{{ url_for('DagenFABView.detail', dag_id=dag_id) }}" class="btn btn-danger" role="button">Cancel</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block tail %}
+    {{ super() }}
+    {% block tail_extra_js %}
+        <script type="text/javascript">
+            window.dagVersions = {{ dagVersions | tojson }}
+        </script>
+        <script src="{{ url_for('dagen_bp.static', filename='dagen/js/edit.js') }}"></script>
+    {% endblock %}
+{% endblock %}
