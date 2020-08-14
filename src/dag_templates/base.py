@@ -28,10 +28,14 @@ class BaseDagTemplate(object):
             return kwargs['dag_id']
 
     @classmethod
+    def get_form_fields(cls):
+        return dict(**DEFAULT_OPTIONS, **cls.options)
+
+    @classmethod
     def as_form(cls, *args, **kwargs):
         class TemplateForm(DagVersionForm):
             pass
-        for key, field in dict(**DEFAULT_OPTIONS, **cls.options).items():
+        for key, field in cls.get_form_fields().items():
             setattr(TemplateForm, key, field)
         form = TemplateForm(*args, **kwargs)
         form.set_dag_id_getter(cls.get_dag_id)

@@ -21,7 +21,11 @@ class CronExpression(validators.Regexp):
         super().__init__(regex, message=message)
 
 
-field_dag_id = StringField('Dag ID', validators=(validators.optional(),))
+field_dag_id = StringField(
+    'Dag ID', validators=(
+        validators.optional(), validators.regexp("^[a-zA-Z._-]+$")),
+    description='Dag ID is made of alphanumeric characters, dashes, dots and underscores exclusively.'
+)
 
 field_schedule_interval = StringField(
     'Cron expression', validators=(validators.required(), CronExpression()))

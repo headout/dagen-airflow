@@ -22,7 +22,7 @@ class DagVersionForm(Form, LoggingMixin):
 
     @provide_session
     def create(self, template_id, user=None, session=None):
-        input_dag_id = self.data['dag_id']
+        input_dag_id = self.data.get('dag_id', None)
         options, default_opts = self._get_options()
         dag_id = self.dag_id_getter(
             dag_id=input_dag_id, **default_opts, **options)

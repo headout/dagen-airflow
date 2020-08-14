@@ -74,6 +74,7 @@ endblock %}
               field.flags.required %}&nbsp;<strong style="color: red;">*</strong>
                                     {% endif %}
                                     {{ field(class_="form-control conf-field") }}
+                                    <i>{{ field.description }}</i>
                                     {% if field.errors %}
                                         {% for error in field.errors %}
                                             <p class="error">{{ error }}</p>
