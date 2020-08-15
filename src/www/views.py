@@ -72,15 +72,6 @@ class DagenFABView(AppBuilderBaseView, LoggingMixin):
             forms=forms
         )
 
-    @expose('/templates')
-    @login_required
-    def list_templates(self):
-        tmpls = get_template_loader().load_templates()
-        return self.render_template(
-            'dagen/templates.html',
-            templates=tmpls
-        )
-
     @expose('/dags/edit', methods=('GET', 'POST'))
     @login_required
     @has_access

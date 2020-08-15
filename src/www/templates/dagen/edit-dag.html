@@ -2,20 +2,10 @@
 {% block page_title %}
     Edit DAG -
     {{ dag_id }}
-{%
-endblock %}
+{% endblock %}
 {% block head_css %}
     {{ super() }}
-
-    <style>
-  body div.form-container {
-    padding: 15px;
-  }
-  .action-btns {
-    text-align: right;
-  }
-</style>
-
+    <link rel="stylesheet" href="{{ url_for('dagen_bp.static', filename='dagen/css/style.css') }}"/>
 {% endblock %}
 {% block content %}
     <h2>

@@ -1,40 +1,33 @@
-{% extends base_template %} {% block page_title %} Dagen Details - {{ dag_id }}
-{% endblock %} {% block head_css %} {{ super() }}
+{% extends base_template %}
+{% block page_title %}
+    Dagen Details -
+    {{ dag_id }}
+{% endblock %}
+{% block head_css %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('dagen_bp.static', filename='dagen/css/style.css') }}"/>
+{% endblock %}
+{% block content %}
+    <h2>
+        Dagen Details -
+        {{ dag_id }}
+    </h2>
+    <hr/>
 
-<style>
-  body div.form-container {
-    padding: 15px;
-  }
-</style>
-
-{% endblock %} {% block content %}
-<h2>
-  Dagen Details - {{ dag_id }}
-</h2>
-<hr />
-
-<div class="row">
-  <div class="container col-md-10" id="main-container">
-    <ul class="nav nav-tabs actions-nav">
-      <li>
-        <a href="{{ url_for('DagenFABView.list') }}">List</a>
-      </li>
-      <li class="active">
-        <a
-          href="{{ url_for('DagenFABView.detail', dag_id=dag_id) }}"
-          title="View Details"
-          >View</a
-        >
-      </li>
-      <li>
-        <a
-          href="{{ url_for('DagenFABView.edit', dag_id=dag_id) }}"
-          title="Edit Details"
-          >Edit</a
-        >
-      </li>
-    </ul>
-  </div>
-</div>
+    <div class="row">
+        <div class="container col-md-10" id="main-container">
+            <ul class="nav nav-tabs actions-nav">
+                <li>
+                    <a href="{{ url_for('DagenFABView.list') }}">List</a>
+                </li>
+                <li class="active">
+                    <a href="{{ url_for('DagenFABView.detail', dag_id=dag_id) }}" title="View Details">View</a>
+                </li>
+                <li>
+                    <a href="{{ url_for('DagenFABView.edit', dag_id=dag_id) }}" title="Edit Details">Edit</a>
+                </li>
+            </ul>
+        </div>
+    </div>
 
 {% endblock %}

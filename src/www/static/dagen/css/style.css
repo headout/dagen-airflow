@@ -1,0 +1,23 @@
+p.error {
+  color: red;
+  font-weight: bolder;
+  text-align: center;
+}
+
+body div.form-container {
+  padding: 15px;
+}
+.wrapper {
+  padding: 15px;
+}
+
+.action-btns {
+  text-align: right;
+}
+
+span.highlighted {
+  background: #f1c40f;
+  display: inline-block;
+  font-weight: bold;
+  padding: 0 6px;
+}

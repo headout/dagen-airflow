@@ -1,17 +1,9 @@
 {% extends base_template %}
 {% block page_title %}Dagen-managed DAGS
-{% endblock
-%}
+{% endblock %}
 {% block head_css %}
     {{ super() }}
-    <style>
-  span.highlighted {
-    background: #f1c40f;
-    display: inline-block;
-    font-weight: bold;
-    padding: 0 6px;
-  }
-</style>
+    <link rel="stylesheet" href="{{ url_for('dagen_bp.static', filename='dagen/css/style.css') }}"/>
 {% endblock %}
 {% block content %}
     <h2>Dagen-managed DAGS</h2>

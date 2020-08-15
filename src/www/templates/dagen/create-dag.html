@@ -1,23 +1,9 @@
 {% extends base_template %}
 {% block page_title %}Create DAG
 {% endblock %}
-{%
-block head_css %}
+{% block head_css %}
     {{ super() }}
-
-    <style>
-  body div.form-container {
-    padding: 15px;
-  }
-  .wrapper {
-    padding: 15px;
-  }
-
-  .action-btns {
-    text-align: right;
-  }
-</style>
-
+    <link rel="stylesheet" href="{{ url_for('dagen_bp.static', filename='dagen/css/style.css') }}"/>
 {% endblock %}
 {% block content %}
     <h2>
