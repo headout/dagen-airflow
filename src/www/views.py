@@ -10,10 +10,10 @@ from flask_appbuilder import BaseView as AppBuilderBaseView
 from flask_appbuilder import expose, has_access
 
 from dagen.exceptions import TemplateNotFoundError
+from dagen.internal import refresh_dagbag
 from dagen.models import DagenDag
 from dagen.query import DagenDagQueryset, DagenDagVersionQueryset
-from dagen.utils import (get_template_loader, refresh_dagbag,
-                         refresh_managed_dags)
+from dagen.utils import get_template_loader, refresh_dagen_templates
 
 
 def login_required(func):
@@ -119,7 +119,7 @@ class DagenFABView(AppBuilderBaseView, LoggingMixin):
     def delete(self, session=None):
         dag_id = request.args.get('dag_id')
         DagenDagQueryset().delete_dag(dag_id).done()
-        refresh_managed_dags()
+        refresh_dagen_templates()
         try:
             delete_dag.delete_dag(dag_id)
         except DagNotFound:
@@ -160,7 +160,8 @@ class DagenFABView(AppBuilderBaseView, LoggingMixin):
         try:
             DagenDagVersionQueryset().approve_live_version(dag_id, user_id).done()
             refresh_dagbag(dag_id=dag_id)
-            flash(f'DAG "{dag_id}" approved successfully!"')
+            flash(
+                f'DAG "{dag_id}" approved successfully! Please wait for 5-10 minutes for workers to refresh and the DAG to go live.')
         except ValueError as e:
             flash(str(e))
         return self._redirect_home()

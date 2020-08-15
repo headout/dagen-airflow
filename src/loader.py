@@ -81,7 +81,6 @@ class TemplateLoader(LoggingMixin):
 
     def get_managed_dags(self):
         dbDags = DagenDagQueryset().get_all(published=True)
-        dags = []
         for dbDag in dbDags:
             options = dbDag.live_version.dag_options
             options = dict(dag_id=dbDag.dag_id,
@@ -91,9 +90,9 @@ class TemplateLoader(LoggingMixin):
                     dbDag.template_id).create_dag(**options)
             except TemplateNotFoundError as e:
                 self.log.warn(
-                    f'Skipping DAG with ID - "{dbDag.dag_id}"... {e}')
-            dags.append(dag)
-        return dags
+                    f'Skipping DAG with ID "{dbDag.dag_id}": {e}')
+            else:
+                yield dag
 
     def get_template_class(self, template_id):
         try:
