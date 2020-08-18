@@ -4,6 +4,7 @@ from airflow.plugins_manager import AirflowPlugin
 from airflow.utils.log.logging_mixin import LoggingMixin
 from flask import Blueprint
 
+from dagen.migrations.utils import initdb
 from dagen.www.views import DagenFABView
 
 ab_dagen_view = DagenFABView()
@@ -35,3 +36,8 @@ class DagenPlugin(AirflowPlugin, LoggingMixin):
     flask_blueprints = (dagen_bp,)
 
     log = logging.root.getChild(f'{__name__}.{"DagenPlugin"}')
+
+    @classmethod
+    def validate(cls):
+        super().validate()
+        initdb()
