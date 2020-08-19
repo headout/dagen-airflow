@@ -2,24 +2,22 @@ import os
 import sys
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
-
 from alembic import context
-
-PACKAGE_PARENT = '../..'
-SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
-sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
+from sqlalchemy import engine_from_config, pool
 
 from dagen.models import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
-config = context.config
+try:
+    config = context.config
+except Exception:
+    config = None
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
-fileConfig(config.config_file_name)
+if config:
+    fileConfig(config.config_file_name)
 
 # add your model's MetaData object here
 # for 'autogenerate' support
@@ -42,6 +40,7 @@ def include_object(object, name, type_, reflected, compare_to):
         return False
     else:
         return True
+
 
 def run_migrations_offline():
     """Run migrations in 'offline' mode.
@@ -93,7 +92,7 @@ def run_migrations_online():
             context.run_migrations()
 
 
-if context.is_offline_mode():
+if config and context.is_offline_mode():
     run_migrations_offline()
-else:
+elif config:
     run_migrations_online()
