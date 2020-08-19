@@ -67,7 +67,7 @@ class DagVersionForm(Form, LoggingMixin):
         data = self.data
         default_opts = {}
         for key in DEFAULT_OPTIONS.keys():
-            default_opts[key] = data.pop(key)
+            default_opts[key] = data.pop(key, None)
         options = data
         default_opts.pop('dag_id')
         return options, default_opts
