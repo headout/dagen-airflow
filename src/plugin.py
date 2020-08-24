@@ -36,8 +36,3 @@ class DagenPlugin(AirflowPlugin, LoggingMixin):
     flask_blueprints = (dagen_bp,)
 
     log = logging.root.getChild(f'{__name__}.{"DagenPlugin"}')
-
-    @classmethod
-    def validate(cls):
-        super().validate()
-        initdb()
