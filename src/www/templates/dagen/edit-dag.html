@@ -54,36 +54,7 @@
                             </select>
                         </div>
                     </div>
-
-                    <div class="panel panel-default form-container">
-                        {% for field in form %}
-                            <div class="form-group">
-                                <div class="col-md-10 form-field">
-                                    {{ field.label(_class="col-md-2 control-label") }}
-                                    {% if
-              field.flags.required %}&nbsp;<strong style="color: red;">*</strong>
-                                    {% endif %}
-                                    {{ field(class_="form-control conf-field") }}
-                                    <i>{{ field.description }}</i>
-                                    {% if field.errors %}
-                                        {% for error in field.errors %}
-                                            <p class="error">{{ error }}</p>
-                                        {% endfor %}
-                                    {% endif %}
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-                    <div style="clear: both;"></div>
-                    <hr/>
-                    <div class="form-group action-btns">
-                        <div class="col-md-offset-2 col-md-10 submit-row">
-                            <input class="btn btn-primary" id="save-btn" type="submit" value="Save"/>
-                            <input class="btn btn-default" id="save-add-btn" name="_add_another" type="submit" value="Save and Add Another"/>
-                            <input class="btn btn-default" id="save-edit-btn" name="_continue_editing" type="submit" value="Save and Continue Editing"/>
-                            <a href="{{ url_for('DagenFABView.detail', dag_id=dag_id) }}" class="btn btn-danger" role="button">Cancel</a>
-                        </div>
-                    </div>
+                    {% include 'dagen/incl_template_form.html' %}
                 </form>
             </div>
         </div>

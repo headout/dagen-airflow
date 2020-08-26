@@ -1,0 +1,42 @@
+<div class="panel panel-default form-container">
+    {% for field in form %}
+        {% with isCheck=field.type in ('BooleanField', 'RadioField') %}
+        <div class="{% if isCheck %}form-check{% else %}form-group{% endif %}">
+            <div class="col-md-10 form-field">
+                {% if isCheck %}
+                    {{ field.label(class="form-check-label") }}
+                {% else %}
+                    {{ field.label(class="control-label") }}
+                {% endif %}
+                {% if
+              field.flags.required %}&nbsp;<strong style="color: red;">*</strong>
+                {% endif %}
+                {% if isCheck %}
+                    {{ field(class_="form-check-input conf-field") }}
+                {% else %}
+                    {{ field(class_="form-control conf-field") }}
+                {% endif %}
+
+                {% if isCheck %}<br/>
+                {% endif %}
+                <i>{{ field.description }}</i>
+                {% if field.errors %}
+                    {% for error in field.errors %}
+                        <p class="error">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+        {% endwith %}
+    {% endfor %}
+</div>
+<div style="clear: both;"></div>
+<hr/>
+<div class="form-group action-btns">
+    <div class="col-md-offset-2 col-md-10 submit-row">
+        <input class="btn btn-primary" id="save-btn" type="submit" value="Save"/>
+        <input class="btn btn-default" id="save-add-btn" name="_add_another" type="submit" value="Save and Add Another"/>
+        <input class="btn btn-default" id="save-edit-btn" name="_continue_editing" type="submit" value="Save and Continue Editing"/>
+        <a href="{{ url_for('DagenFABView.list') }}" class="btn btn-danger" role="button">Cancel</a>
+    </div>
+</div>
