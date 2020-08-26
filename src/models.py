@@ -188,11 +188,16 @@ class DagenDagVersion(Base):
     def dict_repr(self):
         return self.toDict(DagenDagVersion.VALID_ATTRIBUTES)
 
+    def get_options_for_form(self):
+        data = dict(self.dag_options)
+        data['synchronized_runs'] = (data.pop('max_active_runs', None) == 1)
+        return data
+
     def toDict(self, keep_attrs):
         result = {}
         for attr in keep_attrs:
             if attr == 'dag_options':
-                result.update(self.dag_options)
+                result.update(self.get_options_for_form())
             else:
                 result[attr] = getattr(self, attr, None)
         return result

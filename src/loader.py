@@ -84,7 +84,9 @@ class TemplateLoader(LoggingMixin):
         for dbDag in dbDags:
             options = dbDag.live_version.dag_options
             options = dict(dag_id=dbDag.dag_id,
-                           schedule_interval=dbDag.live_version.schedule_interval, **options)
+                           schedule_interval=dbDag.live_version.schedule_interval,
+                           category=dbDag.category,
+                           **options)
             try:
                 dag = self.get_template(
                     dbDag.template_id).create_dag(**options)
