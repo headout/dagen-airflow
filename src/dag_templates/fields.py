@@ -32,6 +32,25 @@ class CronExpression(validators.Regexp):
                 return True
 
 
+class JsonString(object):
+    """
+        Validates that input is a valid JSON string.
+    """
+
+    def __init__(self):
+        import json
+        self.json = json
+
+    def __call__(self, form, field):
+        string = field.data or ''
+        try:
+            self.json.loads(string)
+            return True
+        except Exception as e:
+            message = f'Not a valid JSON string: {e}'
+            raise validators.ValidationError(message)
+
+
 field_dag_id = StringField(
     'Dag ID', validators=(
         validators.optional(), validators.regexp("^[a-zA-Z0-9._-]+$"), validators.length(max=ID_LEN)),
