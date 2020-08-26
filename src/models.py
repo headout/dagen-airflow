@@ -1,4 +1,5 @@
 import json
+import logging
 from functools import cached_property
 
 from airflow.models.base import ID_LEN
@@ -13,6 +14,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import joinedload, relationship, sessionmaker
 
 Base = declarative_base()
+
+logger = logging.getLogger(__name__)
 
 
 class DagenDag(Base):
@@ -119,17 +122,17 @@ class DagenDagVersion(Base):
 
     dag = relationship('DagenDag', back_populates='versions')
     creator = relationship(User, foreign_keys=(creator_id,), lazy='immediate')
-    approver = relationship(User, foreign_keys=(approver_id,), lazy='immediate')
+    approver = relationship(User, foreign_keys=(
+        approver_id,), lazy='immediate')
 
     def __str__(self):
         return f'{self.dag_id} - v{self.version}'
 
-    def __init__(self, dag_id, schedule_interval=None, options=None, creator=None):
+    def __init__(self, dag_id, schedule_interval=None, creator=None, **options):
         self.dag_id = dag_id
         if schedule_interval is not None:
             self.set_schedule_interval(schedule_interval)
-        if options is not None:
-            self.set_options(options)
+        self.set_options(options)
         self.creator_id = creator
 
     def set_schedule_interval(self, schedule_interval):
@@ -138,7 +141,8 @@ class DagenDagVersion(Base):
     def set_options(self, options):
         try:
             self._options = json.dumps(options)
-        except Exception:
+        except Exception as e:
+            logger.exception("could not serialize options", exc_info=e)
             self._options = str(options)
 
     @cached_property
