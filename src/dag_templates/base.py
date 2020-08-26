@@ -34,14 +34,14 @@ class BaseDagTemplate(object):
         return inspect.getsource(self.create_dag)
 
     @classmethod
-    def get_dag_id(cls, **kwargs):
+    def get_dag_id(cls, data):
         try:
-            return cls.format_dag_id.format(**kwargs)
+            return cls.format_dag_id.format(**data)
         except KeyError as e:
-            return kwargs['dag_id']
+            return data['dag_id']
 
     @classmethod
-    def process_field_data(cls, **data):
+    def process_form_data(cls, **data):
         sync_runs = data.pop('synchronized_runs', False)
         if sync_runs:
             data['max_active_runs'] = 1
@@ -59,5 +59,5 @@ class BaseDagTemplate(object):
         for key, field in cls.get_form_fields().items():
             setattr(TemplateForm, key, field)
         form = TemplateForm(*args, **kwargs)
-        form.set_fields_processor(cls.process_field_data)
+        form.set_form_processor(cls.process_form_data)
         return form

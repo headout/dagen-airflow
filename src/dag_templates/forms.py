@@ -19,12 +19,12 @@ DEFAULT_OPTIONS = {
 
 
 class DagVersionForm(Form, LoggingMixin):
-    def set_fields_processor(self, processor):
-        self.process_field_data = processor
+    def set_form_processor(self, processor):
+        self.process_form_data = processor
 
     @provide_session
     def create(self, template_id, user=None, session=None):
-        data = self.process_field_data(**self.data)
+        data = self.process_form_data(**self.data)
         dag_id = data['dag_id']
         options, default_opts = self._get_options(data)
         dag_version = self._get_new_dag_version(
@@ -41,7 +41,7 @@ class DagVersionForm(Form, LoggingMixin):
 
     @provide_session
     def update(self, dbDag, user=None, form_version=None, session=None):
-        data = self.process_field_data(**self.data)
+        data = self.process_form_data(**self.data)
         dag_id = dbDag.dag_id
         options, default_opts = self._get_options(data)
         if form_version and form_version == 'none':
@@ -66,11 +66,13 @@ class DagVersionForm(Form, LoggingMixin):
         return True
 
     def _get_options(self, data):
+        data.pop('dag_id')
         default_opts = {}
         for key in DEFAULT_OPTIONS.keys():
+            if key in ('dag_id', 'synchronized_runs'):
+                continue
             default_opts[key] = data.pop(key, None)
         options = data
-        default_opts.pop('dag_id')
         return options, default_opts
 
     def _get_new_dag_version(self, dag_id, options, default_opts, creator=None):
