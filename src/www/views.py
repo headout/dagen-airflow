@@ -90,7 +90,7 @@ class DagenFABView(AppBuilderBaseView, LoggingMixin):
                 'Either delete this DAG or add back the template with given template ID')
             return self._redirect_home()
         try:
-            init_data = dbDag.live_version.dict_repr
+            init_data = {**dbDag.dict_repr, **dbDag.live_version.dict_repr}
         except Exception as e:
             self.log.exception(e)
             init_data = dbDag.dict_repr

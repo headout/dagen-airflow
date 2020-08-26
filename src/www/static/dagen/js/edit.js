@@ -5,7 +5,9 @@ function syncFieldsWithVersion(val) {
     return;
   }
   for (const [field, val] of Object.entries(version)) {
-    $(`.conf-field#${field}`).val(val);
+    query = $(`.conf-field#${field}`);
+    if ("boolean" === typeof val) query[0].checked = val;
+    else query.val(val);
   }
 }
 
