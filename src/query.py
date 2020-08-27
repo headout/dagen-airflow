@@ -1,4 +1,5 @@
 from airflow.utils.db import provide_session
+from sqlalchemy.orm import joinedload
 
 from dagen.models import DagenDag, DagenDagVersion
 
@@ -33,8 +34,11 @@ class DagenDagQueryset(BaseQueryset):
         self.session.query(DagenDag).filter(DagenDag.dag_id == dag_id).delete()
         return self
 
-    def get_all(self, published=None):
-        dags = self.session.query(DagenDag).all()
+    def get_all(self, eager_load_versions=False, published=None):
+        query = self.session.query(DagenDag)
+        if eager_load_versions:
+            query = query.options(joinedload('versions'))
+        dags = query.all()
         if published is not None:
             dags = list(filter(lambda dag: published == dag.is_enabled, dags))
         return dags

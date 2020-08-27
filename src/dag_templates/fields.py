@@ -32,6 +32,16 @@ class CronExpression(validators.Regexp):
                 return True
 
 
+class FixedBooleanField(BooleanField):
+    """
+        Fixed buggy implementation of `process_data` when Form(data=<dict>) is processed.
+        It was incorrectly checking for truthy condition of the value.
+    """
+
+    def process_data(self, value):
+        self.data = value not in self.false_values
+
+
 class JsonString(object):
     """
         Validates that input is a valid JSON string.
@@ -66,6 +76,6 @@ field_schedule_interval = StringField(
 field_category = StringField(
     'Category', default='default', validators=(validators.optional(), validators.length(max=50)))
 
-field_synchronized_runs = BooleanField(
+field_synchronized_runs = FixedBooleanField(
     'Are runs synchronized?', default=True, description='If the DAG runs are synchronized, then there will only be one active DAG run at a time.'
 )

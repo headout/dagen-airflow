@@ -41,12 +41,12 @@ class BulkSyncDagenForm(FlaskForm):
 
     async def process_row(self, row) -> (bool, str):
         form = self.tmpl_clazz.as_form(data=row)
-        cleaned_data = form.process_form_data(**row)
-        dag_id = cleaned_data['dag_id']
-        dbDag = self.dagmap.get(dag_id, None)
-        is_update = dbDag is not None
         is_valid = form.validate()
         if is_valid:
+            cleaned_data = form.process_form_data(**form.data)
+            dag_id = cleaned_data['dag_id']
+            dbDag = self.dagmap.get(dag_id, None)
+            is_update = dbDag is not None
             if is_update:
                 is_success = form.update(dbDag, self.user)
             else:
@@ -76,11 +76,14 @@ class BulkSyncDagenForm(FlaskForm):
         return is_success, msg
 
     async def asyncSave(self):
+        # dag_qs needed to load versions later
         self.version_qs = DagenDagVersionQueryset()
-        self.dagmap = {
-            dbDag.dag_id: dbDag for dbDag in DagenDagQueryset().get_all()}
+        # HACK: eager load versions here so update works
+        existing = DagenDagQueryset().get_all(eager_load_versions=True)
+        self.dagmap = {dbDag.dag_id: dbDag for dbDag in existing}
         self.tmpl_clazz = get_template_loader().get_template_class(self.template_id.data)
 
+        # FileStorage uses BytesIO stream so first read, decode and convert to StringIO stream
         stream = StringIO(self.csv_data.data.read().decode('UTF-8'))
         # Close the file object
         self.csv_data.data.close()
