@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from wtforms.form import Form
 
 from dagen.dag_templates.fields import (field_category, field_dag_id,
-                                        field_schedule_interval,
+                                        field_pool, field_schedule_interval,
                                         field_synchronized_runs)
 from dagen.models import DagenDag, DagenDagVersion
 
@@ -14,7 +14,8 @@ DEFAULT_OPTIONS = {
     'dag_id': field_dag_id,
     'schedule_interval': field_schedule_interval,
     'category': field_category,
-    'synchronized_runs': field_synchronized_runs
+    'synchronized_runs': field_synchronized_runs,
+    'pool': field_pool
 }
 
 

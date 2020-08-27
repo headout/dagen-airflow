@@ -12,6 +12,8 @@ class BaseDagTemplate(object):
     format_dag_id = '{category}.{dag_id}'
 
     def create_dag(self, dag_id, schedule_interval, catchup=None, is_paused_upon_creation=None, default_args={}, **options):
+        default_args['pool'] = options.get(
+            'pool', 'default_pool') or 'default_pool'
         dag = DAG(
             dag_id,
             default_args=default_args,

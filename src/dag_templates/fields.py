@@ -83,3 +83,8 @@ field_category = StringField(
 field_synchronized_runs = FixedBooleanField(
     'Are runs synchronized?', default=True, description='If the DAG runs are synchronized, then there will only be one active DAG run at a time.'
 )
+
+field_pool = StringField(
+    'Pool', default='default_pool', validators=(validators.optional(),),
+    description='Configure the pool to limit the execution parallelism of all the tasks of this DAG.'
+)
