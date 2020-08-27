@@ -1,0 +1,42 @@
+{% for field in form %}
+    {% with isCheck=field.type in ('BooleanField', 'RadioField') %}
+    {% with isFile=field.type == 'FileField' %}
+    {% with isHidden='hidden' in field.flags %}
+    <div class="{% if isCheck %}form-check{% elif isFile %}custom-file{% else %}form-group{% endif %}">
+        <div class="col-md-10 form-field">
+            {% if not isHidden %}
+                {% if isCheck %}
+                    {{ field.label(class="form-check-label") }}
+                {% elif isFile %}
+                    {{ field.label(class="custom-file-label") }}
+                {% else %}
+                    {{ field.label(class="control-label") }}
+                {% endif %}
+                {% if
+                field.flags.required %}&nbsp;<strong style="color: red;">*</strong>
+                {% endif %}
+            {% endif %}
+            {% if isCheck %}
+                {{ field(class_="form-check-input conf-field") }}
+            {% elif isFile %}
+                {{ field(class_="custom-file-input") }}
+            {% else %}
+                {{ field(class_="form-control conf-field") }}
+            {% endif %}
+
+            {% if isCheck %}<br/>
+            {% endif %}
+            {% if not isHidden %}
+                <i>{{ field.description }}</i>
+            {% endif %}
+            {% if field.errors %}
+                {% for error in field.errors %}
+                    <p class="error">{{ error }}</p>
+                {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+    {% endwith %}
+    {% endwith %}
+    {% endwith %}
+{% endfor %}

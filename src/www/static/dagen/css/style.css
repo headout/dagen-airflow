@@ -21,3 +21,18 @@ span.highlighted {
   font-weight: bold;
   padding: 0 6px;
 }
+
+/*
+  SweetAlert 2
+ */
+.swal2-popup {
+  width: 50em;
+}
+
+.swal2-title {
+  font-size: 2em;
+}
+
+.swal2-content {
+  font-size: 1.4em;
+}

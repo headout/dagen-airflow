@@ -1,34 +1,5 @@
 <div class="panel panel-default form-container">
-    {% for field in form %}
-        {% with isCheck=field.type in ('BooleanField', 'RadioField') %}
-        <div class="{% if isCheck %}form-check{% else %}form-group{% endif %}">
-            <div class="col-md-10 form-field">
-                {% if isCheck %}
-                    {{ field.label(class="form-check-label") }}
-                {% else %}
-                    {{ field.label(class="control-label") }}
-                {% endif %}
-                {% if
-              field.flags.required %}&nbsp;<strong style="color: red;">*</strong>
-                {% endif %}
-                {% if isCheck %}
-                    {{ field(class_="form-check-input conf-field") }}
-                {% else %}
-                    {{ field(class_="form-control conf-field") }}
-                {% endif %}
-
-                {% if isCheck %}<br/>
-                {% endif %}
-                <i>{{ field.description }}</i>
-                {% if field.errors %}
-                    {% for error in field.errors %}
-                        <p class="error">{{ error }}</p>
-                    {% endfor %}
-                {% endif %}
-            </div>
-        </div>
-        {% endwith %}
-    {% endfor %}
+    {% include 'dagen/incl_form_fields.html' %}
 </div>
 <div style="clear: both;"></div>
 <hr/>

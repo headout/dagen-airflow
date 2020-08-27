@@ -5,6 +5,7 @@ from airflow.utils.log.logging_mixin import LoggingMixin
 from flask import Blueprint
 
 from dagen.migrations.utils import initdb
+from dagen.www.api_views import dagen_rest_bp
 from dagen.www.views import DagenFABView
 
 ab_dagen_view = DagenFABView()
@@ -33,6 +34,6 @@ class DagenPlugin(AirflowPlugin, LoggingMixin):
     name = 'dagen'
     appbuilder_views = (ab_dagen_package,)
     appbuilder_menu_items = (ab_dagen_create_mitem,)
-    flask_blueprints = (dagen_bp,)
+    flask_blueprints = (dagen_bp, dagen_rest_bp)
 
     log = logging.root.getChild(f'{__name__}.{"DagenPlugin"}')

@@ -14,22 +14,14 @@ from dagen.internal import refresh_dagbag
 from dagen.models import DagenDag
 from dagen.query import DagenDagQueryset, DagenDagVersionQueryset
 from dagen.utils import get_template_loader, refresh_dagen_templates
-
-
-def login_required(func):
-    # when airflow loads plugins, login is still None.
-    @wraps(func)
-    def func_wrapper(*args, **kwargs):
-        if airflow.login:
-            return airflow.login.login_required(func)(*args, **kwargs)
-        return func(*args, **kwargs)
-    return func_wrapper
+from dagen.www.forms import BulkSyncDagenForm
+from dagen.www.utils import login_required
 
 
 class DagenFABView(AppBuilderBaseView, LoggingMixin):
     route_base = '/dagen'
 
-    log = logging.root.getChild(f'{__name__}.{"DagenView"}')
+    log = logging.root.getChild(f'{__name__}.{"DagenFABView"}')
 
     @expose('/')
     @expose('/dags')
@@ -50,7 +42,7 @@ class DagenFABView(AppBuilderBaseView, LoggingMixin):
 
         tmpls = get_template_loader().template_classes
         forms = {key: tmpl.as_form() for key, tmpl in tmpls.items()}
-        if request.form:
+        if request.method == 'POST' and request.form:
             tmplId = request.form.get('template_id')
             form = forms[tmplId]
             form.process(request.form)
@@ -72,6 +64,33 @@ class DagenFABView(AppBuilderBaseView, LoggingMixin):
             forms=forms
         )
 
+    @expose('/dags/save', methods=('GET', 'POST'))
+    @login_required
+    @has_access
+    def bulk_save(self):
+        template = 'dagen/bulk-save.html'
+        tmpls = get_template_loader().template_classes.keys()
+
+        # make mark_approved no-op if no permission to approve
+        has_approve_perm = self._has_permission('can_approve')
+
+        form = BulkSyncDagenForm(
+            templates=tmpls, has_approve_perm=has_approve_perm)
+        context = {
+            'form': form
+        }
+        if request.method == 'POST' and form.validate():
+            dag_results = form.save(g.user)
+            success_results, failed_results = dict(), dict()
+            for dag_id, (is_success, message) in dag_results.items():
+                if is_success:
+                    success_results[dag_id] = message
+                else:
+                    failed_results[dag_id] = message
+            context['res_success'] = success_results
+            context['res_failure'] = failed_results
+        return self.render_template(template, **context)
+
     @expose('/dags/edit', methods=('GET', 'POST'))
     @login_required
     @has_access
@@ -79,7 +98,8 @@ class DagenFABView(AppBuilderBaseView, LoggingMixin):
         template = 'dagen/edit-dag.html'
 
         dag_id = request.args.get('dag_id')
-        dbDag = DagenDagQueryset().get_dag(dag_id)
+        qs = DagenDagQueryset()
+        dbDag = qs.get_dag(dag_id)
         versions = {
             version.version: version.dict_repr for version in dbDag.versions}
         try:
@@ -95,7 +115,7 @@ class DagenFABView(AppBuilderBaseView, LoggingMixin):
             self.log.exception(e)
             init_data = dbDag.dict_repr
         form = tmpl.as_form(data=init_data)
-        if request.form:
+        if request.method == 'POST' and request.form:
             form.process(request.form)
             if form.validate():
                 ret = form.update(dbDag, user=g.user,
@@ -169,6 +189,7 @@ class DagenFABView(AppBuilderBaseView, LoggingMixin):
     def render_template(self, template, **kwargs):
         extra_ctx = {
             'perm_can_create': self._has_permission('can_create'),
+            'perm_can_bulk_save': self._has_permission('can_bulk_save'),
             'perm_can_edit': self._has_permission('can_edit'),
             'perm_can_approve': self._has_permission('can_approve'),
             'perm_can_delete': self._has_permission('can_delete'),

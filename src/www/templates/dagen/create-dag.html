@@ -14,12 +14,17 @@
     <div class="row">
         <div class="container col-md-10" id="main-container">
             <ul class="nav nav-tabs actions-nav">
-                <li>
-                    <a href="{{ url_for('DagenFABView.list') }}">List</a>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('DagenFABView.list') }}">List ({{ dbDags|length }})</a>
                 </li>
-                <li class="active">
-                    <a href="{{ url_for('DagenFABView.create') }}" title="Create New DAG">Create</a>
+                <li class="nav-item active">
+                    <a class="nav-link" href="{{ url_for('DagenFABView.create') }}" title="Create New DAG">Create</a>
                 </li>
+                {% if perm_can_bulk_save %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('DagenFABView.bulk_save') }}" title="Bulk Save DAGs">Bulk Sync</a>
+                    </li>
+                {% endif %}
             </ul>
 
             <div class="wrapper admin-form form-horizontal">
