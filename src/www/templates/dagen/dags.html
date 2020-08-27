@@ -21,21 +21,13 @@
         {% endif %}
         {% if perm_can_create %}
             <li>
-                <a href="{{ url_for('DagenFABView.bulk_create') }}" title="Bulk Create New DAGs">Bulk Create</a>
+                <a href="{{ url_for('DagenFABView.bulk_save') }}" title="Bulk Save DAGs">Bulk Sync</a>
             </li>
         {% endif %}
         {% if perm_can_approve %}
             <span class="text-right">
                 <form class="form-actions ajax-form" method="POST" action="{{ url_for('DagenRestView.approve_all') }}">
-                    <input
-                        class="btn btn-warning submit"
-                        data-confirm-level="warning"
-                        data-confirm-description="All the current Dagen DAGs version will be approved and immediately published live."
-                        data-confirm-title="Are you sure?"
-                        data-confirm-button="Yes, approve them all!"
-                        role="button"
-                        type="submit"
-                        value="Approve all" />
+                    <input class="btn btn-warning submit" data-confirm-button="Yes, approve them all!" data-confirm-description="All the current Dagen DAGs version will be approved and immediately published live." data-confirm-level="warning" data-confirm-title="Are you sure?" role="button" type="submit" value="Approve all"/>
                 </form>
             </span>
         {% endif %}
@@ -113,10 +105,10 @@
     </table>
 {% endblock %}
 {% block tail %}
-{{ super() }}
-{% block tail_extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
-<script>
+    {{ super() }}
+    {% block tail_extra_js %}
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
+        <script>
   Swal = Swal.mixin({
     customClass: {
       confirmButton: "btn btn-success",
@@ -125,6 +117,6 @@
     buttonsStyling: false,
   });
 </script>
-<script src="{{ url_for('dagen_bp.static', filename='dagen/js/ajax-form.js') }}"></script>
-{% endblock %}
+        <script src="{{ url_for('dagen_bp.static', filename='dagen/js/ajax-form.js') }}"></script>
+    {% endblock %}
 {% endblock %}

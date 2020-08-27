@@ -7,7 +7,7 @@ from wtforms.fields import SelectField
 cron_dump_csv = file_allowed(('csv',))
 
 
-class BulkCreateDagenForm(FlaskForm):
+class BulkSyncDagenForm(FlaskForm):
     template_id = SelectField(
         'Template ID',
         validators=(validators.required(),),

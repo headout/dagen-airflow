@@ -14,7 +14,7 @@ from dagen.internal import refresh_dagbag
 from dagen.models import DagenDag
 from dagen.query import DagenDagQueryset, DagenDagVersionQueryset
 from dagen.utils import get_template_loader, refresh_dagen_templates
-from dagen.www.forms import BulkCreateDagenForm
+from dagen.www.forms import BulkSyncDagenForm
 from dagen.www.utils import login_required
 
 
@@ -64,13 +64,13 @@ class DagenFABView(AppBuilderBaseView, LoggingMixin):
             forms=forms
         )
 
-    @expose('/dags/create/bulk', methods=('GET', 'POST'))
+    @expose('/dags/save', methods=('GET', 'POST'))
     @login_required
     @has_access
-    def bulk_create(self):
-        template = 'dagen/bulk-create.html'
+    def bulk_save(self):
+        template = 'dagen/bulk-save.html'
         tmpls = get_template_loader().template_classes.keys()
-        form = BulkCreateDagenForm(templates=tmpls)
+        form = BulkSyncDagenForm(templates=tmpls)
         if request.method == 'POST' and form.validate():
             ret = form.save()
             if ret:
