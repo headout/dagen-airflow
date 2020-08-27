@@ -71,14 +71,12 @@ class DagenFABView(AppBuilderBaseView, LoggingMixin):
         template = 'dagen/bulk-save.html'
         tmpls = get_template_loader().template_classes.keys()
         form = BulkSyncDagenForm(templates=tmpls)
+        context = {
+            'form': form
+        }
         if request.method == 'POST' and form.validate():
-            ret = form.save()
-            if ret:
-                return self._handle_form_submission(request.form)
-        return self.render_template(
-            template,
-            form=form
-        )
+            context['result'] = form.save(g.user)
+        return self.render_template(template, **context)
 
     @expose('/dags/edit', methods=('GET', 'POST'))
     @login_required
@@ -87,7 +85,8 @@ class DagenFABView(AppBuilderBaseView, LoggingMixin):
         template = 'dagen/edit-dag.html'
 
         dag_id = request.args.get('dag_id')
-        dbDag = DagenDagQueryset().get_dag(dag_id)
+        qs = DagenDagQueryset()
+        dbDag = qs.get_dag(dag_id)
         versions = {
             version.version: version.dict_repr for version in dbDag.versions}
         try:

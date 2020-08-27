@@ -36,6 +36,7 @@ class DagVersionForm(Form, LoggingMixin):
             self.log.exception(e)
             self.dag_id.errors.append('DAG ID must be unique!')
             return None
+        dag._live_version = dag_version.version
         session.query(DagenDag).get(dag_id)._live_version = dag_version.version
         return dag
 
@@ -62,6 +63,7 @@ class DagVersionForm(Form, LoggingMixin):
             else:
                 # Just bloody create a new version!
                 self._add_dag_version(dag_version)
+        dbDag._live_version = dag_version.version
         session.query(DagenDag).get(dag_id)._live_version = dag_version.version
         return True
 

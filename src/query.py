@@ -45,7 +45,7 @@ class DagenDagVersionQueryset(BaseQueryset):
         return self.session.query(DagenDagVersion).filter(DagenDagVersion.dag_id == dag_id)
 
     def approve_live_version(self, dag_id, user_id):
-        dbDag = DagenDagQueryset().get_dag(dag_id)
+        dbDag = DagenDagQueryset(session=self.session).get_dag(dag_id)
         if not dbDag.is_published:
             raise ValueError(f'Live version not set for given DAG "{dag_id}"!')
         if dbDag.is_enabled:
