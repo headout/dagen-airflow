@@ -15,10 +15,13 @@
         <div class="container col-md-10" id="main-container">
             <ul class="nav nav-tabs actions-nav">
                 <li>
-                    <a href="{{ url_for('DagenFABView.list') }}">List</a>
+                    <a href="{{ url_for('DagenFABView.list') }}">List ({{ dbDags|length }})</a>
                 </li>
                 <li class="active">
                     <a href="{{ url_for('DagenFABView.create') }}" title="Create New DAG">Create</a>
+                </li>
+                <li>
+                    <a href="{{ url_for('DagenFABView.bulk_create') }}" title="Bulk Create New DAGs">Bulk Create</a>
                 </li>
             </ul>
 

@@ -67,7 +67,20 @@ class DagenFABView(AppBuilderBaseView, LoggingMixin):
     @login_required
     @has_access
     def bulk_create(self):
-        pass
+        template = 'dagen/bulk-create.html'
+
+        tmpls = get_template_loader().template_classes
+        if request.form:
+            tmplId = request.form.get('template_id')
+            return self.render_template(
+                template,
+                template_classes=tmpls,
+                template_id=tmplId
+            )
+        return self.render_template(
+            template,
+            template_classes=tmpls
+        )
 
     @expose('/dags/edit', methods=('GET', 'POST'))
     @login_required
