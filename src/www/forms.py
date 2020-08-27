@@ -35,8 +35,10 @@ class BulkSyncDagenForm(FlaskForm):
         description='Additionally mark all the new DAG versions as approved if checked.'
     )
 
-    def __init__(self, templates=[], **kwargs):
+    def __init__(self, templates=[], has_approve_perm=True, **kwargs):
         super().__init__(**kwargs)
+        if not has_approve_perm:
+            del self.mark_approved
         self.template_id.choices = tuple(zip(templates, templates))
 
     async def process_row(self, row) -> (bool, str):
@@ -66,7 +68,10 @@ class BulkSyncDagenForm(FlaskForm):
         if msg is None:
             msg = f'Encounted errors: {json.dumps(form.errors)}'
         is_success = is_valid and is_success
-        if self.mark_approved.data and is_success:
+
+        # handle missing 'mark_approved' field
+        f_mark_approved = getattr(self, 'mark_approved', None)
+        if f_mark_approved and f_mark_approved.data and is_success:
             try:
                 self.version_qs.approve_live_version(dag_id, self.user.id)
             except ValueError as e:

@@ -19,7 +19,7 @@
                 <a class="nav-link" href="{{ url_for('DagenFABView.create') }}" title="Create New DAG">Create</a>
             </li>
         {% endif %}
-        {% if perm_can_create %}
+        {% if perm_can_bulk_save %}
             <li class="nav-item">
                 <a class="nav-link" href="{{ url_for('DagenFABView.bulk_save') }}" title="Bulk Save DAGs">Bulk Sync</a>
             </li>

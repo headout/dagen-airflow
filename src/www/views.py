@@ -70,7 +70,12 @@ class DagenFABView(AppBuilderBaseView, LoggingMixin):
     def bulk_save(self):
         template = 'dagen/bulk-save.html'
         tmpls = get_template_loader().template_classes.keys()
-        form = BulkSyncDagenForm(templates=tmpls)
+
+        # make mark_approved no-op if no permission to approve
+        has_approve_perm = self._has_permission('can_approve')
+
+        form = BulkSyncDagenForm(
+            templates=tmpls, has_approve_perm=has_approve_perm)
         context = {
             'form': form
         }
@@ -184,6 +189,7 @@ class DagenFABView(AppBuilderBaseView, LoggingMixin):
     def render_template(self, template, **kwargs):
         extra_ctx = {
             'perm_can_create': self._has_permission('can_create'),
+            'perm_can_bulk_save': self._has_permission('can_bulk_save'),
             'perm_can_edit': self._has_permission('can_edit'),
             'perm_can_approve': self._has_permission('can_approve'),
             'perm_can_delete': self._has_permission('can_delete'),
