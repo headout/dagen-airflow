@@ -72,6 +72,12 @@ class DagenFABView(AppBuilderBaseView, LoggingMixin):
             forms=forms
         )
 
+    @expose('/dags/create/bulk', methods=('GET', 'POST'))
+    @login_required
+    @has_access
+    def bulk_create(self):
+        pass
+
     @expose('/dags/edit', methods=('GET', 'POST'))
     @login_required
     @has_access
@@ -165,6 +171,12 @@ class DagenFABView(AppBuilderBaseView, LoggingMixin):
         except ValueError as e:
             flash(str(e))
         return self._redirect_home()
+
+    @expose('/dags/approve/all')
+    @login_required
+    @has_access
+    def approve_all(self):
+        pass
 
     def render_template(self, template, **kwargs):
         extra_ctx = {

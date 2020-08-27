@@ -18,6 +18,19 @@
                 <a href="{{ url_for('DagenFABView.create') }}" title="Create New DAG">Create</a>
             </li>
         {% endif %}
+        {% if perm_can_create %}
+            <li>
+                <a href="{{ url_for('DagenFABView.bulk_create') }}" title="Bulk Create New DAGs">Bulk Create</a>
+            </li>
+        {% endif %}
+
+        {% if perm_can_approve %}
+            <span class="text-right">
+                <form method="POST" action="{{ url_for('DagenFABView.approve_all') }}">
+                    <input class="btn btn-warning" id="btn-approve-all" role="button" type="submit" value="Approve all"/>
+                </form>
+            </span>
+        {% endif %}
     </ul>
 
     <div class="clearfix"></div>
@@ -97,4 +110,34 @@
             </tr>
         {% endfor %}
     </table>
+{% endblock %}
+
+{% block tail %}
+{{ super() }}
+{% block tail_extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
+<script>
+    const swalWithBootstrapButtons = Swal.mixin({
+        customClass: {
+            confirmButton: 'btn btn-success',
+            cancelButton: 'btn btn-primary'
+        },
+        buttonsStyling: false
+    })
+    $('#btn-approve-all').on('click', function (e) {
+        e.preventDefault();
+        var form = $(this).parents('form');
+        swalWithBootstrapButtons.fire({
+            title: "Are you sure?",
+            text: "All the current Dagen DAGs version will be approved and immediately published live.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Yes, approve them all!",
+            closeOnConfirm: false
+        }).then((result) => {
+            if (result.value) form.submit();
+        });
+    });
+</script>
+{% endblock %}
 {% endblock %}
