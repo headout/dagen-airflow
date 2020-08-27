@@ -14,22 +14,13 @@ from dagen.internal import refresh_dagbag
 from dagen.models import DagenDag
 from dagen.query import DagenDagQueryset, DagenDagVersionQueryset
 from dagen.utils import get_template_loader, refresh_dagen_templates
-
-
-def login_required(func):
-    # when airflow loads plugins, login is still None.
-    @wraps(func)
-    def func_wrapper(*args, **kwargs):
-        if airflow.login:
-            return airflow.login.login_required(func)(*args, **kwargs)
-        return func(*args, **kwargs)
-    return func_wrapper
+from dagen.www.utils import login_required
 
 
 class DagenFABView(AppBuilderBaseView, LoggingMixin):
     route_base = '/dagen'
 
-    log = logging.root.getChild(f'{__name__}.{"DagenView"}')
+    log = logging.root.getChild(f'{__name__}.{"DagenFABView"}')
 
     @expose('/')
     @expose('/dags')
@@ -171,12 +162,6 @@ class DagenFABView(AppBuilderBaseView, LoggingMixin):
         except ValueError as e:
             flash(str(e))
         return self._redirect_home()
-
-    @expose('/dags/approve/all')
-    @login_required
-    @has_access
-    def approve_all(self):
-        pass
 
     def render_template(self, template, **kwargs):
         extra_ctx = {

@@ -26,7 +26,7 @@
         {% endif %}
         {% if perm_can_approve %}
             <span class="text-right">
-                <form class="form-actions ajax-form" method="POST" action="{{ url_for('DagenFABView.approve_all') }}">
+                <form class="form-actions ajax-form" method="POST" action="{{ url_for('DagenRestView.approve_all') }}">
                     <input
                         class="btn btn-warning submit"
                         data-confirm-level="warning"

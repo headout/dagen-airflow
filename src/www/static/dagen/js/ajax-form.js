@@ -14,19 +14,17 @@ function initAjaxFormPosts() {
           $form.attr("method") || "POST",
           $form.serialize()
         )
-          .done((data, _, { status }) => {
-            if (status != 200)
-              Swal.showValidationMessage(
-                `Request failed with ${status}: ${data}`
-              );
-            else return "success";
+          .then((data) => {
+            return data;
           })
-          .fail(({ status }, _, error) => {
+          .catch(({ status, statusText }) => {
             Swal.showValidationMessage(
-              `Request errored with ${status}: ${error}`
+              `Request errored with ${status}: ${statusText}`
             );
-            throw error;
           });
+
+      const refreshAfterTimeout = () =>
+        setTimeout(() => window.location.reload(), 2000);
 
       $form.find(".btn.submit").bind("click", function (e) {
         // do not submit the form
@@ -53,12 +51,13 @@ function initAjaxFormPosts() {
             if (result.value) {
               Swal.fire({
                 title: "Success!",
-                text: result.value,
+                text: JSON.stringify(result.value),
               });
+              refreshAfterTimeout();
             }
           });
         } else {
-          postAjaxHandler();
+          postAjaxHandler().then(refreshAfterTimeout);
         }
       });
     });
