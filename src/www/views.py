@@ -75,7 +75,15 @@ class DagenFABView(AppBuilderBaseView, LoggingMixin):
             'form': form
         }
         if request.method == 'POST' and form.validate():
-            context['result'] = form.save(g.user)
+            dag_results = form.save(g.user)
+            success_results, failed_results = dict(), dict()
+            for dag_id, (is_success, message) in dag_results.items():
+                if is_success:
+                    success_results[dag_id] = message
+                else:
+                    failed_results[dag_id] = message
+            context['res_success'] = success_results
+            context['res_failure'] = failed_results
         return self.render_template(template, **context)
 
     @expose('/dags/edit', methods=('GET', 'POST'))

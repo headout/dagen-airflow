@@ -1,0 +1,16 @@
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th scope="col">DAG ID</th>
+            <th scope="col">Message</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for dag_id, message in result.items() %}
+            <tr>
+                <td>{{ dag_id }}</td>
+                <td>{{ message|replace('\n', '<br>'|safe) }}</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>

@@ -14,14 +14,14 @@
 <div class="row">
     <div class="container col-md-10" id="main-container">
         <ul class="nav nav-tabs actions-nav">
-            <li>
-                <a href="{{ url_for('DagenFABView.list') }}">List ({{ dbDags|length }})</a>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('DagenFABView.list') }}">List ({{ dbDags|length }})</a>
             </li>
-            <li>
-                <a href="{{ url_for('DagenFABView.create') }}" title="Create New DAG">Create</a>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('DagenFABView.create') }}" title="Create New DAG">Create</a>
             </li>
-            <li class="active">
-                <a href="{{ url_for('DagenFABView.bulk_save') }}" title="Bulk Save DAGs">Bulk Sync</a>
+            <li class="nav-item active">
+                <a class="nav-link" href="{{ url_for('DagenFABView.bulk_save') }}" title="Bulk Save DAGs">Bulk Sync</a>
             </li>
         </ul>
 
@@ -38,6 +38,41 @@
             </form>
         </div>
 
-        {{ result }}
+        <ul class="nav nav-pills" role="tablist">
+            {% if res_success %}
+                <li class="nav-item active">
+                    <a aria-controls="result-success" aria-selected="true" class="nav-link active" data-toggle="pill" href="#result-success" id="result-success-tab" role="tab">
+                        {{ res_success|length }}
+                        success
+                    </a>
+                </li>
+            {% endif %}
+            {% if res_failure %}
+                <li class="nav-item {% if not res_success %}active{% endif %}">
+                    <a aria-controls="result-failure" aria-selected="{{ not res_success }}" class="nav-link {% if not res_success %}active{% endif %}" data-toggle="pill" href="#result-failure" id="result-failure-tab" role="tab">
+                        {{ res_failure|length }}
+                        failure
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+        {% if res_success or res_failure %}
+            <div class="tab-content" id="result-tabContent">
+                {% if res_success %}
+                    <div aria-labelledby="result-success-tab" class="tab-pane active" id="result-success" role="tabpanel">
+                        {% with result=res_success %}
+                        {% include 'dagen/incl_result_table_bulk_save.html' %}
+                        {% endwith %}
+                    </div>
+                {% endif %}
+                {% if res_failure %}
+                    <div aria-labelledby="result-failure-tab" class="tab-pane {% if not res_success %}active{% endif %}" id="result-failure" role="tabpanel">
+                        {% with result=res_failure %}
+                        {% include 'dagen/incl_result_table_bulk_save.html' %}
+                        {% endwith %}
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
     </div>
 </div>{% endblock %}
