@@ -9,6 +9,12 @@ class BaseQueryset(object):
         super().__init__()
         self.session = session
 
+    def __del__(self):
+        # To ensure that session is properly closed when the
+        # queryset object is garbage collected.
+        # Keeping unusable opened sessions would eat up mysql connections
+        self.session.close()
+
     def done(self):
         try:
             self.session.commit()
