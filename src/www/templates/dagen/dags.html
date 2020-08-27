@@ -1,6 +1,7 @@
 {% extends base_template %}
 {% block page_title %}Dagen-managed DAGS
-{% endblock %}
+{% endblock
+%}
 {% block head_css %}
     {{ super() }}
     <link rel="stylesheet" href="{{ url_for('dagen_bp.static', filename='dagen/css/style.css') }}"/>
@@ -23,11 +24,18 @@
                 <a href="{{ url_for('DagenFABView.bulk_create') }}" title="Bulk Create New DAGs">Bulk Create</a>
             </li>
         {% endif %}
-
         {% if perm_can_approve %}
             <span class="text-right">
-                <form method="POST" action="{{ url_for('DagenFABView.approve_all') }}">
-                    <input class="btn btn-warning" id="btn-approve-all" role="button" type="submit" value="Approve all"/>
+                <form class="form-actions ajax-form" method="POST" action="{{ url_for('DagenFABView.approve_all') }}">
+                    <input
+                        class="btn btn-warning submit"
+                        data-confirm-level="warning"
+                        data-confirm-description="All the current Dagen DAGs version will be approved and immediately published live."
+                        data-confirm-title="Are you sure?"
+                        data-confirm-button="Yes, approve them all!"
+                        role="button"
+                        type="submit"
+                        value="Approve all" />
                 </form>
             </span>
         {% endif %}
@@ -40,29 +48,21 @@
                 <th width="12">
                     <span class="glyphicon glyphicon-info-sign" data-original-title="Toggle live status of DAG" id="state_header" title=""></span>
                 </th>
-                <th class="column-header">
-                    Dag Representation
-                </th>
-                <th class="column-header">
-                    Scheduled Interval
-                </th>
-                <th class="column-header">
-                    Author
-                </th>
-                <th class="col-md-1">
-                    Links
-                </th>
+                <th class="column-header">Dag Representation</th>
+                <th class="column-header">Scheduled Interval</th>
+                <th class="column-header">Author</th>
+                <th class="col-md-1">Links</th>
             </tr>
         </thead>
         {% for dbDag in dbDags %}
             <tr>
                 <td>
                     {% if dbDag.is_enabled %}
-                        <span class="label" data-original-title="Published" style="background-color: green;" title="">{{ dbDag.version_str }}</span>
+                        <span class="label" data-original-title="Published" style="background-color: green" title="">{{ dbDag.version_str }}</span>
                     {% elif dbDag.is_published %}
-                        <span class="label" data-original-title="Pending Approval" style="background-color: yellow; color: black;" title="">{{ dbDag.version_str }}</span>
+                        <span class="label" data-original-title="Pending Approval" style="background-color: yellow; color: black" title="">{{ dbDag.version_str }}</span>
                     {% else %}
-                        <span class="label" data-original-title="Disabled" style="background-color: red;" title="">X</span>
+                        <span class="label" data-original-title="Disabled" style="background-color: red" title="">X</span>
                     {% endif %}
                 </td>
                 <td>
@@ -72,8 +72,7 @@
                     <span class="label label-default">
                         {% if dbDag.is_published %}
                             {{ dbDag.live_version.schedule_interval }}
-                            {%
-        else %}-
+                            {% else %}-
                         {% endif %}
                     </span>
                 </td>
@@ -81,7 +80,8 @@
                     <span class="label label-default">
                         {% if dbDag.is_published %}
                             {{ dbDag.live_version.creator_str }}
-                            {% else %}-
+                            {% else
+        %}-
                         {% endif %}
                     </span>
                 </td>
@@ -96,14 +96,15 @@
                             <span class="fa fa-pencil glyphicon glyphicon-list" data-original-title="" title=""></span>
                         </a>
                     {% endif %}
-                    {% if dbDag.is_published and not dbDag.is_enabled and perm_can_approve %}
+                    {% if dbDag.is_published and not dbDag.is_enabled and
+      perm_can_approve %}
                         <a class="icon link-tooltip" href="{{ url_for('DagenFABView.approve', dag_id=dbDag.dag_id) }}" title="Approve">
                             <span class="fa fa-pencil glyphicon glyphicon-plane" data-original-title="" title=""></span>
                         </a>
                     {% endif %}
                     {% if perm_can_delete %}
                         <a class="icon link-tooltip" href="{{ url_for('DagenFABView.delete', dag_id=dbDag.dag_id) }}">
-                            <span class="glyphicon glyphicon-remove-circle" data-original-title="Delete" style="color: red;"></span>
+                            <span class="glyphicon glyphicon-remove-circle" data-original-title="Delete" style="color: red"></span>
                         </a>
                     {% endif %}
                 </td>
@@ -111,33 +112,19 @@
         {% endfor %}
     </table>
 {% endblock %}
-
 {% block tail %}
 {{ super() }}
 {% block tail_extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
 <script>
-    const swalWithBootstrapButtons = Swal.mixin({
-        customClass: {
-            confirmButton: 'btn btn-success',
-            cancelButton: 'btn btn-primary'
-        },
-        buttonsStyling: false
-    })
-    $('#btn-approve-all').on('click', function (e) {
-        e.preventDefault();
-        var form = $(this).parents('form');
-        swalWithBootstrapButtons.fire({
-            title: "Are you sure?",
-            text: "All the current Dagen DAGs version will be approved and immediately published live.",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonText: "Yes, approve them all!",
-            closeOnConfirm: false
-        }).then((result) => {
-            if (result.value) form.submit();
-        });
-    });
+  Swal = Swal.mixin({
+    customClass: {
+      confirmButton: "btn btn-success",
+      cancelButton: "btn btn-primary",
+    },
+    buttonsStyling: false,
+  });
 </script>
+<script src="{{ url_for('dagen_bp.static', filename='dagen/js/ajax-form.js') }}"></script>
 {% endblock %}
 {% endblock %}
