@@ -14,6 +14,7 @@ from dagen.internal import refresh_dagbag
 from dagen.models import DagenDag
 from dagen.query import DagenDagQueryset, DagenDagVersionQueryset
 from dagen.utils import get_template_loader, refresh_dagen_templates
+from dagen.www.forms import BulkCreateDagenForm
 from dagen.www.utils import login_required
 
 
@@ -41,7 +42,7 @@ class DagenFABView(AppBuilderBaseView, LoggingMixin):
 
         tmpls = get_template_loader().template_classes
         forms = {key: tmpl.as_form() for key, tmpl in tmpls.items()}
-        if request.form:
+        if request.method == 'POST' and request.form:
             tmplId = request.form.get('template_id')
             form = forms[tmplId]
             form.process(request.form)
@@ -68,18 +69,15 @@ class DagenFABView(AppBuilderBaseView, LoggingMixin):
     @has_access
     def bulk_create(self):
         template = 'dagen/bulk-create.html'
-
-        tmpls = get_template_loader().template_classes
-        if request.form:
-            tmplId = request.form.get('template_id')
-            return self.render_template(
-                template,
-                template_classes=tmpls,
-                template_id=tmplId
-            )
+        tmpls = get_template_loader().template_classes.keys()
+        form = BulkCreateDagenForm(templates=tmpls)
+        if request.method == 'POST' and form.validate():
+            ret = form.save()
+            if ret:
+                return self._handle_form_submission(request.form)
         return self.render_template(
             template,
-            template_classes=tmpls
+            form=form
         )
 
     @expose('/dags/edit', methods=('GET', 'POST'))
@@ -105,7 +103,7 @@ class DagenFABView(AppBuilderBaseView, LoggingMixin):
             self.log.exception(e)
             init_data = dbDag.dict_repr
         form = tmpl.as_form(data=init_data)
-        if request.form:
+        if request.method == 'POST' and request.form:
             form.process(request.form)
             if form.validate():
                 ret = form.update(dbDag, user=g.user,

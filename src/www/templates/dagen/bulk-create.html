@@ -27,30 +27,9 @@
 
         <div class="wrapper admin-form form-horizontal">
             <form action="" class="admin-form form-horizontal" enctype="multipart/form-data" method="POST" role="form">
-                {% if csrf_token %}
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                {% endif %}
-                <div class="col-md-10 form-group">
-                    <label class="control-label" for="template_id">
-                        Template ID &nbsp;<strong style="color: red;">*</strong>
-                    </label>
-                    <div class="form-field">
-                        <select class="form-control" id="template_id" name="template_id">
-                            <option disabled hidden {% if not template_id %} selected {% endif %} value="none">
-                                Select an Option
-                            </option>
-                            {% for tmplId, tmpl in template_classes.items() %}
-                                <option {% if template_id == tmplId %} selected {% endif %} value="{{ tmplId }}">{{ tmplId }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </div>
+                <div class="panel panel-default form-container">
+                    {% include 'dagen/incl_form_fields.html' %}
                 </div>
-                <div class="col-md-10 form-field custom-file">
-                    <label class="control-label custom-file-label" for="csv_data">Choose CSV file</label>
-                    <input class="form-control custom-file-input" id="csv_data" name="csv_data" type="file">
-                </div>
-
                 <div class="form-group action-btns">
                     <div class="col-md-offset-2 col-md-10 submit-row">
                         <input class="btn btn-primary" id="save-btn" type="submit" value="Save"/>
