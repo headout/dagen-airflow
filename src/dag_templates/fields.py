@@ -38,6 +38,10 @@ class FixedBooleanField(BooleanField):
         It was incorrectly checking for truthy condition of the value.
     """
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.type = 'BooleanField'
+
     def process_data(self, value):
         self.data = value not in self.false_values
 
