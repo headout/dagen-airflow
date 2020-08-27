@@ -11,17 +11,17 @@
     <hr/>
 
     <ul class="nav nav-tabs actions-nav">
-        <li class="active">
-            <a href="{{ url_for('DagenFABView.list') }}">List ({{ dbDags|length }})</a>
+        <li class="nav-item active">
+            <a class="nav-link" href="{{ url_for('DagenFABView.list') }}">List ({{ dbDags|length }})</a>
         </li>
         {% if perm_can_create %}
-            <li>
-                <a href="{{ url_for('DagenFABView.create') }}" title="Create New DAG">Create</a>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('DagenFABView.create') }}" title="Create New DAG">Create</a>
             </li>
         {% endif %}
         {% if perm_can_create %}
-            <li>
-                <a href="{{ url_for('DagenFABView.bulk_save') }}" title="Bulk Save DAGs">Bulk Sync</a>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('DagenFABView.bulk_save') }}" title="Bulk Save DAGs">Bulk Sync</a>
             </li>
         {% endif %}
         {% if perm_can_approve %}
