@@ -21,9 +21,9 @@ class BaseDagTemplate(object):
             is_paused_upon_creation=is_paused_upon_creation,
         )
         max_active_runs = options.get('max_active_runs', None)
-        if max_active_runs:
+        if max_active_runs is not None:
             dag.max_active_runs = max_active_runs
-        if catchup:
+        if catchup is not None:
             dag.catchup = catchup
         return dag
 
