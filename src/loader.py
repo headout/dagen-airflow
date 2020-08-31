@@ -1,8 +1,10 @@
 import imp
+import logging
 import os
 import sys
 from datetime import datetime
 
+import sqlalchemy
 from airflow.configuration import conf
 from airflow.utils.dag_processing import list_py_file_paths
 from airflow.utils.db import provide_session
@@ -16,6 +18,7 @@ from dagen.exceptions import TemplateNotFoundError
 from dagen.models import DagenDag, DagenDagVersion
 from dagen.query import DagenDagQueryset
 
+logger = logging.getLogger(__name__)
 
 class TemplateLoader(LoggingMixin):
     TEMPLATE_IMPORT_TIMEOUT = conf.getint('core', 'DAGBAG_IMPORT_TIMEOUT')
@@ -80,7 +83,11 @@ class TemplateLoader(LoggingMixin):
         return self.templates
 
     def get_managed_dags(self):
-        dbDags = DagenDagQueryset().get_all(published=True)
+        try:
+            dbDags = DagenDagQueryset().get_all(published=True)
+        except Exception as e:
+            dbDags = list()
+            logger.warn("failed to load DAGs (probably since dagen tables are not loaded)", exc_info=e)
         for dbDag in dbDags:
             options = dbDag.live_version.dag_options
             options = dict(dag_id=dbDag.dag_id,
