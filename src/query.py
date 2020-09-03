@@ -59,7 +59,16 @@ class DagenDagVersionQueryset(BaseQueryset):
         return self
 
     def get_all_current_unapproved(self):
-        return list(map(lambda dbDag: dbDag.live_version, DagenDagQueryset(session=self.session).get_all(published=False)))
+        return list(
+            filter(
+                lambda elem: elem is not None,
+                map(
+                    lambda dbDag: dbDag.live_version,
+                    DagenDagQueryset(session=self.session).get_all(
+                        published=False)
+                )
+            )
+        )
 
     def approve_all(self, dag_versions, user_id):
         for dag_version in dag_versions:
