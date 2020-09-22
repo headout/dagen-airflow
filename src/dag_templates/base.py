@@ -20,7 +20,6 @@ class BaseDagTemplate(object):
             default_args=default_args,
             schedule_interval=schedule_interval,
             is_paused_upon_creation=is_paused_upon_creation,
-            **options
         )
         max_active_runs = options.get('max_active_runs', None)
         if max_active_runs is not None:
