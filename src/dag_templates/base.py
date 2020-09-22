@@ -11,7 +11,8 @@ class BaseDagTemplate(object):
     template_id = None
     format_dag_id = '{category}.{dag_id}'
 
-    def create_dag(self, dag_id, schedule_interval, catchup=None, is_paused_upon_creation=None, default_args={}, **options):
+    def create_dag(self, dag_id, schedule_interval, catchup=None, is_paused_upon_creation=None, default_args={}, owner='Dagen', **options):
+        default_args['owner'] = owner
         default_args['pool'] = options.get(
             'pool', 'default_pool') or 'default_pool'
         dag = DAG(
@@ -19,6 +20,7 @@ class BaseDagTemplate(object):
             default_args=default_args,
             schedule_interval=schedule_interval,
             is_paused_upon_creation=is_paused_upon_creation,
+            **options
         )
         max_active_runs = options.get('max_active_runs', None)
         if max_active_runs is not None:
