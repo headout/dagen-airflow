@@ -66,13 +66,13 @@ class JsonString(object):
 
 
 field_dag_id = StringField(
-    'Dag ID', validators=(
+    'Cron ID', validators=(
         validators.optional(), validators.regexp("^[a-zA-Z0-9._-]+$"), validators.length(max=ID_LEN)),
-    description='Dag ID is made of alphanumeric characters, dashes, dots and underscores exclusively.'
+    description='Cron ID is made of alphanumeric characters, dashes, dots and underscores exclusively.'
 )
 
 field_schedule_interval = StringField(
-    'Cron expression', validators=(
+    'Cron Schedule', validators=(
         validators.required(), CronExpression()),
     description=f'Specify the schedule interval in standard crontab format (https://crontab.guru/) or use one of the presets ({", ".join(cron_presets.keys())})'
 )

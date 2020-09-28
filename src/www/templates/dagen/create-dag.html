@@ -68,7 +68,7 @@
         {% if template_id %}
             $("#tmplForm_{{ template_id }}").show();
         {% elif template_classes|length == 1 %}
-            $("#tmplForm_{{ template_classes.keys()[0] }}").show();
+            $("#tmplForm_{{ template_classes.keys()|first }}").show();
         {% endif %}
         $("#template_id").change((event) => {
             let val = $(event.target).val();
