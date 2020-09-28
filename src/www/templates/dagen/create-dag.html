@@ -28,6 +28,7 @@
             </ul>
 
             <div class="wrapper admin-form form-horizontal">
+                {% if template_classes|length > 1 %}
                 <div class="form-group">
                     <label class="col-md-2 control-label" for="template_id">
                         Template ID &nbsp;<strong style="color: red;">*</strong>
@@ -41,6 +42,7 @@
                         </select>
                     </div>
                 </div>
+                {% endif %}
                 {% for tmplId, form in forms.items() %}
                     <form action="" class="admin-form form-horizontal tmpl-form" enctype="multipart/form-data" id="tmplForm_{{ tmplId }}" method="POST" role="form">
                         <input type="hidden" name="template_id" value="{{ tmplId }}"/>
@@ -58,20 +60,22 @@
 {{ super() }}
 {% block tail_extra_js %}
 <script>
-            function resetForms() {
-                $(".tmpl-form").hide();
-            }
-            $(document).ready(() => {
-                resetForms();
-                {% if template_id %}
-                    $("#tmplForm_{{ template_id }}").show();
-                {% endif %}
-                $("#template_id").change((event) => {
-                    let val = $(event.target).val();
-                    resetForms();
-                    $("#tmplForm_" + val).show();
-                });
-            });
-        </script>
-    {% endblock %}
+    function resetForms() {
+        $(".tmpl-form").hide();
+    }
+    $(document).ready(() => {
+        resetForms();
+        {% if template_id %}
+            $("#tmplForm_{{ template_id }}").show();
+        {% elif template_classes|length == 1 %}
+            $("#tmplForm_{{ template_classes.keys()[0] }}").show();
+        {% endif %}
+        $("#template_id").change((event) => {
+            let val = $(event.target).val();
+            resetForms();
+            $("#tmplForm_" + val).show();
+        });
+    });
+</script>
+{% endblock %}
 {% endblock %}
