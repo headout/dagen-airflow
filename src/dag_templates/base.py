@@ -53,7 +53,9 @@ class BaseDagTemplate(object):
 
     @classmethod
     def get_form_fields(cls):
-        return dict(**DEFAULT_OPTIONS, **cls.options)
+        result = dict(**DEFAULT_OPTIONS)
+        result.update(cls.options)
+        return result
 
     @classmethod
     def as_form(cls, *args, **kwargs):
