@@ -66,9 +66,11 @@
             // Adjust
             if (!passAll) {
                 $target.attr('disabled', 'disabled').addClass('disabled');
+                $target.parent().hide()
             }
             else {
                 $target.removeAttr('disabled').removeClass('disabled');
+                $target.parent().show()
             }
         }).trigger('change');
 
@@ -89,11 +91,13 @@
             deps.forEach(dep => {
                 const depArr = dep.split("=")
                 let targetValue = null
-                const targetName = depArr[0]
                 if (depArr.length > 1) {
-                    targetValue = depArr[1]
+                    // only get the rstrip last elem
+                    targetValue = depArr.pop()
                 }
-                $field.dependsOn(`input[name=${targetName}]`, targetValue)
+                // rest needs to remain same
+                const targetField = depArr.join("=")
+                $field.dependsOn(targetField, targetValue)
             });
         })
     })

@@ -1,22 +1,22 @@
 import logging
+from collections import OrderedDict
 
 from airflow.utils.db import provide_session
 from airflow.utils.log.logging_mixin import LoggingMixin
-from sqlalchemy.exc import IntegrityError
-from wtforms.form import Form
-
 from dagen.dag_templates.fields import (field_category, field_dag_id,
                                         field_pool, field_schedule_interval,
                                         field_synchronized_runs)
 from dagen.models import DagenDag, DagenDagVersion
+from sqlalchemy.exc import IntegrityError
+from wtforms.form import Form
 
-DEFAULT_OPTIONS = {
-    'dag_id': field_dag_id,
-    'schedule_interval': field_schedule_interval,
-    'category': field_category,
-    'synchronized_runs': field_synchronized_runs,
-    'pool': field_pool
-}
+DEFAULT_OPTIONS = OrderedDict(
+    category=field_category,
+    dag_id=field_dag_id,
+    schedule_interval=field_schedule_interval,
+    synchronized_runs=field_synchronized_runs,
+    pool=field_pool
+)
 
 
 class DagVersionForm(Form, LoggingMixin):
