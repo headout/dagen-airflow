@@ -59,6 +59,7 @@
 {% block tail %}
 {{ super() }}
 {% block tail_extra_js %}
+<script src="{{ url_for('dagen_bp.static', filename='dagen/js/jsonform.js') }}"></script>
 <script>
     function resetForms() {
         $(".tmpl-form").hide();
