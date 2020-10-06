@@ -58,11 +58,16 @@ class BaseDagTemplate(object):
         return result
 
     @classmethod
+    def prehook_form(cls, form):
+        pass
+
+    @classmethod
     def as_form(cls, *args, **kwargs):
         class TemplateForm(DagVersionForm):
             pass
         for key, field in cls.get_form_fields().items():
             setattr(TemplateForm, key, field)
         form = TemplateForm(*args, **kwargs)
+        cls.prehook_form(form)
         form.set_form_processor(cls.process_form_data)
         return form
