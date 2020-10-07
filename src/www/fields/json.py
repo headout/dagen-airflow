@@ -6,6 +6,8 @@ from wtforms.widgets import Select, TextInput, html_params
 
 
 class TextInputGroup(TextInput):
+    field_flags = ('hidden',)
+
     def __init__(self, prepend=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.text_prepend = prepend
@@ -23,25 +25,26 @@ class TextInputGroup(TextInput):
 
 
 class JsonFormMultipleField(StringField):
-    widget = TextInputGroup("Change")
-
-    def __init__(self, *args, selector_name=None, choices=None, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, label, *args, selector_name=None, choices=None, **kwargs):
+        self.widget = TextInputGroup(label)
+        super().__init__(label, *args, **kwargs)
         self.selector_name = selector_name
         self.choices = choices
 
     def __call__(self, **kwargs):
         kwargs['group_kwargs'] = {
-            "class_": f'{kwargs.get("class_", "")} btn-jsonform {self.name}'
+            "class_": f'btn-jsonform {self.name}'
         }
         kwargs['readonly'] = True
         result = None
         for target_value, jsonschema in self.choices:
-            kwargs['group_kwargs'].update(**{
-                "dep-enable-expr": f'select[name={self.selector_name}]={target_value}',
+            value_kwargs = dict(kwargs)
+            value_kwargs['id'] = f'{self.name}-{target_value}'
+            value_kwargs['group_kwargs'].update(**{
                 "data_jsonschema": json.dumps(jsonschema),
-                "data_target_name": self.name
+                "data_target_id": value_kwargs['id']
             })
-            sup_call = super().__call__(**kwargs)
+            value_kwargs["dep-enable-expr"] = f'select[name={self.selector_name}]={target_value}'
+            sup_call = super().__call__(**value_kwargs)
             result = sup_call if result is None else result + sup_call
         return result

@@ -102,7 +102,10 @@
 
     $(".btn-jsonform").click(function () {
       const $btn = $(this);
+      const $targetElem = $(`input#${$btn.data("target-id")}`);
       const schema = JSON.parse(JSON.parse($btn.data("jsonschema")));
+      let val = undefined;
+      if (!!$targetElem.val()) val = JSON.parse($targetElem.val());
       // Clear and set new form
       $("#modal-jsonform form.jsonform")
         .html("")
@@ -110,10 +113,14 @@
           schema: schema,
           onSubmit: function (errors, values) {
             console.log(errors, values);
-            $(`input[name=${$btn.data("target-name")}]`).val(
-              JSON.stringify(values)
-            );
+            if (errors) {
+              alert(errors);
+              return;
+            }
+            $targetElem.val(JSON.stringify(values));
+            $("#modal-jsonform").modal("hide");
           },
+          value: val,
         });
       $("#modal-jsonform").modal("show");
     });
