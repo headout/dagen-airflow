@@ -1,64 +1,47 @@
 import json
 
 from markupsafe import Markup, escape
-from wtforms.fields import HiddenField
-from wtforms.widgets import html_params, Select
+from wtforms.fields import HiddenField, StringField
+from wtforms.widgets import Select, TextInput, html_params
 
 
-class JsonFormWidget(object):
-    html_params = staticmethod(html_params)
+class TextInputGroup(TextInput):
+    def __init__(self, prepend=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.text_prepend = prepend
 
-    def __init__(self, json_schema):
-        self.json_schema = json_schema
-
-    def __call__(self, field, **kwargs):
-        kwargs.setdefault('id', f'form-{field.id}')
-        kwargs.setdefault('data_jsonschema', json.dumps(self.json_schema))
+    def __call__(self, field, group_kwargs={}, **kwargs):
+        group_kwargs['class_'] = f'{group_kwargs["class_"]} input-group'
         return Markup(
             f'''
-            <form {self.html_params(**kwargs)}></form>
-            <script>
-                $(function() {{
-                    const $targetField = $('input[name={field.name}]');
-                    $('form[data-jsonschema]#{kwargs['id']}').jsonForm({{
-                        schema: {self.json_schema},
-                        onSubmit: function(errors, values) {{
-                            console.log(errors, values)
-                            $targetField.val(JSON.stringify(values))
-                        }}
-                    }});
-                }})
-            </script>
+            <div {html_params(**group_kwargs)}>
+                <span class="input-group-addon">{self.text_prepend}</span>
+                {super().__call__(field, **kwargs)}
+            </div>
             '''
         )
 
 
-class JsonFormHiddenField(HiddenField):
-    def __init__(self, *args, json_schema=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.jsonform_widget = JsonFormWidget(json_schema)
+class JsonFormMultipleField(StringField):
+    widget = TextInputGroup("Change")
 
-    def __call__(self, **kwargs):
-        result = super().__call__(**kwargs)
-        result += self.jsonform_widget(self)
-        return result
-
-
-class JsonFormMultipleField(HiddenField):
     def __init__(self, *args, selector_name=None, choices=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.selector_name = selector_name
         self.choices = choices
-        self.value_widgets = (
-            (choice[0], JsonFormWidget(choice[1]))
-            for choice in choices
-        )
 
     def __call__(self, **kwargs):
-        result = super().__call__(**kwargs)
-        for target_value, widget in self.value_widgets:
-            result += widget(self, **{
+        kwargs['group_kwargs'] = {
+            "class_": f'{kwargs.get("class_", "")} btn-jsonform {self.name}'
+        }
+        kwargs['readonly'] = True
+        result = None
+        for target_value, jsonschema in self.choices:
+            kwargs['group_kwargs'].update(**{
                 "dep-enable-expr": f'select[name={self.selector_name}]={target_value}',
-                "class_": f'jsonform {self.name}'
+                "data_jsonschema": json.dumps(jsonschema),
+                "data_target_name": self.name
             })
+            sup_call = super().__call__(**kwargs)
+            result = sup_call if result is None else result + sup_call
         return result

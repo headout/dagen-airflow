@@ -22,6 +22,10 @@ span.highlighted {
   padding: 0 6px;
 }
 
+.btn-jsonform {
+  cursor: pointer;
+}
+
 /*
   SweetAlert 2
  */

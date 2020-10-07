@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="{{ url_for('dagen_bp.static', filename='dagen/css/style.css') }}"/>
 {% endblock %}
 {% block content %}
+    {% include 'dagen/incl_modal_jsonform.html' %}
+
     <h2>
         Edit DAG -
         {{ dag_id }}
@@ -63,6 +65,10 @@
 {% block tail %}
     {{ super() }}
     {% block tail_extra_js %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.11.0/underscore-min.js"
+        integrity="sha512-wBiNJt1JXeA/ra9F8K2jyO4Bnxr0dRPsy7JaMqSlxqTjUGHe1Z+Fm5HMjCWqkIYvp/oCbdJEivZ5pLvAtK0csQ=="
+        crossorigin="anonymous"></script>
+
         <script type="text/javascript">
             window.dagVersions = {{ dagVersions | tojson }}
         </script>
