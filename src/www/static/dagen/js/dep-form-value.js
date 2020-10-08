@@ -102,7 +102,8 @@
 
     $(".btn-jsonform").click(function () {
       const $btn = $(this);
-      const $targetElem = $(`input#${$btn.data("target-id")}`);
+      // do not use # selector for ID since it may have period
+      const $targetElem = $(`input[id="${$btn.data("target-id")}"]`);
       const schema = JSON.parse(JSON.parse($btn.data("jsonschema")));
       let val = undefined;
       if (!!$targetElem.val()) val = JSON.parse($targetElem.val());
