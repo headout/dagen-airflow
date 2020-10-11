@@ -1,5 +1,4 @@
 import imp
-import logging
 import os
 import sys
 from datetime import datetime
@@ -10,15 +9,13 @@ from airflow.utils.dag_processing import list_py_file_paths
 from airflow.utils.db import provide_session
 from airflow.utils.log.logging_mixin import LoggingMixin
 from airflow.utils.timeout import timeout
-from sqlalchemy.orm import joinedload
-
 from dagen.config import config
 from dagen.dag_templates import BaseDagTemplate
 from dagen.exceptions import TemplateNotFoundError
 from dagen.models import DagenDag, DagenDagVersion
 from dagen.query import DagenDagQueryset
+from sqlalchemy.orm import joinedload
 
-logger = logging.getLogger(__name__)
 
 class TemplateLoader(LoggingMixin):
     TEMPLATE_IMPORT_TIMEOUT = conf.getint('core', 'DAGBAG_IMPORT_TIMEOUT')
@@ -87,7 +84,8 @@ class TemplateLoader(LoggingMixin):
             dbDags = DagenDagQueryset().get_all(published=True)
         except Exception as e:
             dbDags = list()
-            logger.warn("failed to load DAGs (probably since dagen tables are not loaded)", exc_info=e)
+            self.log.warn(
+                "failed to load DAGs (probably since dagen tables are not loaded)", exc_info=e)
         for dbDag in dbDags:
             options = dbDag.live_version.dag_options
             options = dict(dag_id=dbDag.dag_id,
@@ -100,6 +98,11 @@ class TemplateLoader(LoggingMixin):
             except TemplateNotFoundError as e:
                 self.log.warn(
                     f'Skipping DAG with ID "{dbDag.dag_id}": {e}')
+            except Exception as e:
+                self.log.exception(
+                    f'Errored on creating DAG with ID "{dbDag.dag_id}',
+                    exc_info=e
+                )
             else:
                 yield dag
 
