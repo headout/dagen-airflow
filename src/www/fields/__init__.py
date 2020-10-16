@@ -1,1 +1,1 @@
-from .json import *
+from dagen.www.fields.jsonform import *

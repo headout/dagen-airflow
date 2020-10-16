@@ -1,6 +1,10 @@
 import logging
 
-from airflow.www_rbac.app import csrf
+try:
+    from airflow.www_rbac.app import csrf
+except ImportError:
+    # Airflow 2.0.0
+    from airflow.www.app import csrf
 from flask import (Blueprint, current_app, flash, g, jsonify, make_response,
                    redirect, request, url_for)
 
