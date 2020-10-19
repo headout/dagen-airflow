@@ -28,4 +28,4 @@ def dagen_initdb(func):
     return wrapper
 
 
-db.initdb = dagen_initdb(db.initdb)
+db.upgradedb = dagen_initdb(db.upgradedb)

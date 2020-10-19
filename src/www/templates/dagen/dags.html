@@ -80,18 +80,18 @@
                 <td class="list-buttons-column">
                     {% if perm_can_edit %}
                         <a class="icon link-tooltip" href="{{ url_for('DagenFABView.edit', dag_id=dbDag.dag_id) }}" title="Edit">
-                            <span class="fa fa-pencil glyphicon glyphicon-pencil" data-original-title="" title=""></span>
+                            <span class="fa fa-pencil" data-original-title="" title=""></span>
                         </a>
                     {% endif %}
                     {% if dbDag.is_published and perm_can_detail %}
                         <a class="icon link-tooltip" href="{{ url_for('DagenFABView.detail', dag_id=dbDag.dag_id) }}" title="Details">
-                            <span class="fa fa-pencil glyphicon glyphicon-list" data-original-title="" title=""></span>
+                            <span class="fa fa-list" data-original-title="" title=""></span>
                         </a>
                     {% endif %}
                     {% if dbDag.is_published and not dbDag.is_enabled and
       perm_can_approve %}
                         <a class="icon link-tooltip" href="{{ url_for('DagenFABView.approve', dag_id=dbDag.dag_id) }}" title="Approve">
-                            <span class="fa fa-pencil glyphicon glyphicon-plane" data-original-title="" title=""></span>
+                            <span class="fa fa-plane" data-original-title="" title=""></span>
                         </a>
                     {% endif %}
                     {% if perm_can_delete %}
