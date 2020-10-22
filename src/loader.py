@@ -2,10 +2,19 @@ import imp
 import os
 import sys
 from datetime import datetime
+from functools import partial
 
 import sqlalchemy
 from airflow.configuration import conf
-from airflow.utils.dag_processing import list_py_file_paths
+
+try:
+    # Airflow v2.0
+    from airflow.utils.file import list_py_file_paths
+    list_py_file_paths = partial(
+        list_py_file_paths, include_smart_sensor=False)
+except ImportError:
+    from airflow.utils.dag_processing import list_py_file_paths
+
 from airflow.utils.db import provide_session
 from airflow.utils.log.logging_mixin import LoggingMixin
 from airflow.utils.timeout import timeout
@@ -15,6 +24,13 @@ from dagen.exceptions import TemplateNotFoundError
 from dagen.models import DagenDag, DagenDagVersion
 from dagen.query import DagenDagQueryset
 from sqlalchemy.orm import joinedload
+
+
+list_py_file_paths = partial(
+    list_py_file_paths,
+    include_examples=False,
+    safe_mode=False
+)
 
 
 class TemplateLoader(LoggingMixin):
@@ -73,7 +89,7 @@ class TemplateLoader(LoggingMixin):
 
     def load_templates(self, only_if_updated=True):
         self.log.info(f'Loading DAG Templates from "{self.templates_dir}"...')
-        for filepath in list_py_file_paths(self.templates_dir, safe_mode=False, include_examples=False):
+        for filepath in list_py_file_paths(self.templates_dir):
             self.process_file(filepath, only_if_updated=only_if_updated)
         self.templates = {key: cls()
                           for key, cls in self.template_classes.items()}
