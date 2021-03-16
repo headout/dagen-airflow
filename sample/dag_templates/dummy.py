@@ -4,7 +4,7 @@ from random import choice
 
 from airflow import DAG
 from airflow.contrib.sensors.aws_sqs_sensor import SQSSensor
-from airflow.operators.bash_operator import BashOperator
+from airflow.operators.bash import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.utils.dates import days_ago
 from wtforms.fields import StringField, TextField
