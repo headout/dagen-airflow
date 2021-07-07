@@ -78,7 +78,7 @@ class DagenDag(Base):
     def __getattr__(self, name):
         if hasattr(DagenDagVersion, name):
             return getattr(self.live_version, name)
-        return super().__getattr__(name)
+        raise AttributeError
 
     def __eq__(self, value):
         if isinstance(value, type(self)):
