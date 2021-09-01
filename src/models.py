@@ -1,4 +1,3 @@
-import json
 import logging
 from functools import cached_property
 
@@ -8,6 +7,7 @@ from airflow.utils.dates import cron_presets
 from airflow.utils.db import provide_session
 from airflow.utils.sqlalchemy import UtcDateTime
 from croniter import croniter
+from dagen.serialization import dumps, loads
 from flask_appbuilder.security.sqla.models import User
 from sqlalchemy import Column, ForeignKey, Integer, String, Text, event
 from sqlalchemy.ext.declarative import declarative_base
@@ -140,7 +140,7 @@ class DagenDagVersion(Base):
 
     def set_options(self, options):
         try:
-            self._options = json.dumps(options)
+            self._options = dumps(options)
         except Exception as e:
             logger.exception("could not serialize options", exc_info=e)
             self._options = str(options)
@@ -155,7 +155,7 @@ class DagenDagVersion(Base):
 
     @cached_property
     def dag_options(self):
-        return json.loads(self._options)
+        return loads(self._options)
 
     @cached_property
     def schedule_interval(self):

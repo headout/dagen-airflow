@@ -15,6 +15,8 @@ class BaseDagTemplate(object):
         default_args['owner'] = owner
         default_args['pool'] = options.get(
             'pool', 'default_pool') or 'default_pool'
+        if 'start_date' in options:
+            default_args['start_date'] = options['start_date']
         dag = DAG(
             dag_id,
             default_args=default_args,

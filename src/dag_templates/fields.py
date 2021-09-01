@@ -1,4 +1,5 @@
 import re
+from datetime import datetime
 
 from airflow.models.base import ID_LEN
 from airflow.utils.dates import cron_presets
@@ -82,6 +83,10 @@ field_category = StringField(
 
 field_synchronized_runs = FixedBooleanField(
     'Are runs synchronized?', default=True, description='If the DAG runs are synchronized, then there will only be one active DAG run at a time.'
+)
+
+field_start_date = DateTimeField(
+    'Start Date of DAG', default=datetime(2020, 9, 1), description='Specify the Start datetime of DAG, this affects how the crons schedule be decided based on the schedule interval.'
 )
 
 field_pool = StringField(
