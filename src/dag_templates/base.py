@@ -11,7 +11,7 @@ class BaseDagTemplate(object):
     template_id = None
     format_dag_id = '{category}.{dag_id}'
 
-    def create_dag(self, dag_id, schedule_interval, catchup=None, is_paused_upon_creation=None, default_args={}, owner='Dagen', **options):
+    def create_dag(self, dag_id, schedule_interval, catchup=None, dagrun_timeout=None ,is_paused_upon_creation=None, default_args={}, owner='Dagen', **options):
         default_args['owner'] = owner
         default_args['pool'] = options.get(
             'pool', 'default_pool') or 'default_pool'
@@ -28,6 +28,8 @@ class BaseDagTemplate(object):
             dag.max_active_runs = max_active_runs
         if catchup is not None:
             dag.catchup = catchup
+        if dagrun_timeout is not None:
+            dag.dagrun_timeout = dagrun_timeout
         return dag
 
     @classmethod
