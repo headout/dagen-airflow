@@ -40,8 +40,11 @@
                             Template ID &nbsp;<strong style="color: red;">*</strong>
                         </label>
                         <div class="col-md-4 form-field">
-                            <select disabled value="{{ dbDag.template_id }}" class="form-control" id="template_id" name="template_id">
-                                <option selected value="{{ dbDag.template_id }}">{{ dbDag.template_id }}</option>
+                            <select class="form-control" id="template_id" name="template_id">
+                                <option disabled hidden {% if not template_id %} selected {% endif %} value="none">Select an Option</option>
+                                {% for tmplId, tmpl in template_classes.items() %}
+                                <option {% if template_id == tmplId %} selected {% endif %} value="{{ tmplId }}">{{ tmplId }}</option>
+                                {% endfor %}
                             </select>
                         </div>
                         <label class="col-md-1 control-label" for="live_version">
