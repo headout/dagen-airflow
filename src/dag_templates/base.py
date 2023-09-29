@@ -23,7 +23,7 @@ class BaseDagTemplate(object):
             schedule_interval=schedule_interval,
             is_paused_upon_creation=is_paused_upon_creation,
         )
-        max_active_runs = options.get('max_active_runs', None)
+        max_active_runs = default_args['max_active_runs']
         if max_active_runs is not None:
             dag.max_active_runs = max_active_runs
         if catchup is not None:
