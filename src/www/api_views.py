@@ -39,7 +39,7 @@ def _render_json(data, status=200):
 @csrf.exempt
 @dagen_rest_bp.route('/api/dags/ext/create', methods=('POST',))
 @login_required
-def create_dag_json(self):
+def create_dag_json():
     try:
         data = request.json
         if not data:
