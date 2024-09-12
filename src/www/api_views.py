@@ -44,7 +44,9 @@ def _render_json(data, status=200):
 @login_required
 def create_dag_json():
     try:
+    
         data = request.json
+        data.start_date =  datetime.strptime(data.start_date, "%d-%m-%Y")
         if not data:
             return jsonify({"error": "No JSON data provided"}), 400
 
