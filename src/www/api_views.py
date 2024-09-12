@@ -11,6 +11,7 @@ from flask import (Blueprint, current_app, flash, g, jsonify, make_response,
 from dagen.query import DagenDagQueryset, DagenDagVersionQueryset
 from dagen.www.utils import login_required
 from flask_appbuilder import expose, has_access
+from dagen.utils import get_template_loader
 dagen_rest_bp = Blueprint('DagenRestView', __name__, url_prefix='/dagen/api')
 
 log = logging.root.getChild(f'{__name__}.{"DagenRestView"}')
@@ -71,5 +72,4 @@ def create_dag_json():
             return jsonify({"error": "Validation failed", "errors": form.errors}), 400
 
     except Exception as e:
-        self.log.exception(f"Error creating DAG via JSON API: {str(e)}")
         return jsonify({"error": str(e)}), 500
