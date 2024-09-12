@@ -37,7 +37,7 @@ def _render_json(data, status=200):
 
 #supports selenium team's requirement - optimus bot
 @csrf.exempt
-@expose('/api/dags/ext/create', methods=['POST'])
+@dagen_rest_bp.route('/api/dags/ext/create', methods=('POST',))
 @login_required
 def create_dag_json(self):
     try:
