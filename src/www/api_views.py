@@ -12,6 +12,8 @@ from dagen.query import DagenDagQueryset, DagenDagVersionQueryset
 from dagen.www.utils import login_required
 from flask_appbuilder import expose, has_access
 from dagen.utils import get_template_loader
+from dagen.internal import refresh_dagbag
+
 dagen_rest_bp = Blueprint('DagenRestView', __name__, url_prefix='/dagen/api')
 
 log = logging.root.getChild(f'{__name__}.{"DagenRestView"}')
