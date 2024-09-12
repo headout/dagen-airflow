@@ -10,7 +10,7 @@ from flask import (Blueprint, current_app, flash, g, jsonify, make_response,
 
 from dagen.query import DagenDagQueryset, DagenDagVersionQueryset
 from dagen.www.utils import login_required
-
+from flask_appbuilder import expose, has_access
 dagen_rest_bp = Blueprint('DagenRestView', __name__, url_prefix='/dagen/api')
 
 log = logging.root.getChild(f'{__name__}.{"DagenRestView"}')
