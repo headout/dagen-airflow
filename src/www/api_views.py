@@ -1,5 +1,5 @@
 import logging
-
+from datetime import datetime
 try:
     from airflow.www_rbac.app import csrf
 except ImportError:
@@ -10,6 +10,9 @@ from flask import (Blueprint, current_app, flash, g, jsonify, make_response,
 
 from dagen.query import DagenDagQueryset, DagenDagVersionQueryset
 from dagen.www.utils import login_required
+from flask_appbuilder import expose, has_access
+from dagen.utils import get_template_loader
+from dagen.internal import refresh_dagbag
 
 dagen_rest_bp = Blueprint('DagenRestView', __name__, url_prefix='/dagen/api')
 
@@ -33,3 +36,44 @@ def _render_json(data, status=200):
     response = make_response(jsonify(**data), status)
     response.headers["Content-Type"] = "application/json"
     return response
+
+
+#supports selenium team's requirement - optimus bot
+@csrf.exempt
+@dagen_rest_bp.route('/api/dags/ext/create', methods=('POST',))
+@login_required
+def create_dag_json():
+    try:
+    
+        data = request.json
+        data["start_date"] =  datetime.strptime(data.get('start_date'), "%d-%m-%Y")
+        if not data:
+            return jsonify({"error": "No JSON data provided"}), 400
+
+        tmpls = get_template_loader().template_classes
+        forms = {key: tmpl.as_form() for key, tmpl in tmpls.items()}
+
+        tmpl_id = data.get('template_id')
+        if not tmpl_id or tmpl_id not in forms:
+            return jsonify({"error": "Invalid or missing template_id"}), 400
+
+        form = forms[tmpl_id]
+        form.process(formdata=None, data=data)
+
+        if form.validate():
+            ret = form.create(template_id=tmpl_id, user=g.user)
+            if ret:
+                msg = f'"{ret.dag_id}" created successfully'
+                refresh_dagbag(dag_id=ret.dag_id)
+                return jsonify({
+                    "message": msg,
+                    "dag_id": ret.dag_id,
+                    "template_id": tmpl_id
+                }), 201
+            else:
+                return jsonify({"error": "Failed to create DAG"}), 500
+        else:
+            return jsonify({"error": "Validation failed", "errors": form.errors}), 400
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
