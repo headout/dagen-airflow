@@ -17,6 +17,8 @@ class BaseDagTemplate(object):
             'pool', 'default_pool') or 'default_pool'
         if 'start_date' in options:
             default_args['start_date'] = options['start_date']
+        if schedule_interval == "":
+            schedule_interval = None
         dag = DAG(
             dag_id,
             default_args=default_args,
