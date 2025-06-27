@@ -104,8 +104,9 @@ class TemplateLoader(LoggingMixin):
                 "failed to load DAGs (probably since dagen tables are not loaded)", exc_info=e)
         for dbDag in dbDags:
             options = dbDag.live_version.dag_options
+            schedule_interval = dbDag.live_version.schedule_interval
             options = dict(dag_id=dbDag.dag_id,
-                           schedule_interval=dbDag.live_version.schedule_interval,
+                           schedule_interval=schedule_interval,
                            category=dbDag.category,
                            **options)
             try:

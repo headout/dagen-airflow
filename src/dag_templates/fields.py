@@ -74,7 +74,7 @@ field_dag_id = StringField(
 
 field_schedule_interval = StringField(
     'Cron Schedule', validators=(
-        validators.required(), CronExpression()),
+        validators.optional(), CronExpression()),
     description=f'Specify the schedule interval in standard crontab format (https://crontab.guru/) or use one of the presets ({", ".join(cron_presets.keys())})'
 )
 
