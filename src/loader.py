@@ -1,4 +1,4 @@
-import imp
+import importlib.util
 import os
 import sys
 from datetime import datetime
@@ -8,7 +8,7 @@ import sqlalchemy
 from airflow.configuration import conf
 
 try:
-    # Airflow v2.0
+    # Airflow v3.1.5+
     from airflow.utils.file import list_py_file_paths
     list_py_file_paths = partial(
         list_py_file_paths, include_smart_sensor=False)
@@ -69,7 +69,10 @@ class TemplateLoader(LoggingMixin):
         mods = []
         with timeout(self.TEMPLATE_IMPORT_TIMEOUT):
             try:
-                m = imp.load_source(modname, filepath)
+                spec = importlib.util.spec_from_file_location(modname, filepath)
+                m = importlib.util.module_from_spec(spec)
+                sys.modules[modname] = m
+                spec.loader.exec_module(m)
                 mods.append(m)
             except Exception as e:
                 self.log.exception(f'Failed to import: {filepath}')
