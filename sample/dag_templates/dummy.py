@@ -6,7 +6,6 @@ from airflow import DAG
 from airflow.providers.amazon.aws.sensors.sqs import SqsSensor
 from airflow.operators.bash import BashOperator
 from airflow.operators.dummy import DummyOperator
-from airflow.utils.dates import days_ago
 from wtforms.fields import StringField, TextField
 
 from dagen.dag_templates import BaseDagTemplate
@@ -16,7 +15,7 @@ default_args = {
     'depends_on_past': False,
     'retries': 3,
     'retry_delay': timedelta(seconds=30),
-    'start_date': days_ago(1),
+    'start_date': datetime.now() - timedelta(days=1),
 }
 
 
