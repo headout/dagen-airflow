@@ -22,7 +22,7 @@ class BaseDagTemplate(object):
         dag = DAG(
             dag_id,
             default_args=default_args,
-            schedule_interval=schedule_interval,
+            schedule=schedule_interval,
             is_paused_upon_creation=is_paused_upon_creation,
         )
         max_active_runs = options.get('max_active_runs', None)

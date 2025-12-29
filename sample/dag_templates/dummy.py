@@ -28,7 +28,7 @@ class DummyTemplate(BaseDagTemplate):
         dag = DAG(
             options['dag_id'],
             default_args=default_args,
-            schedule_interval=options['schedule_interval']
+            schedule=options['schedule_interval']
         )
         start_task = DummyOperator(task_id="start", dag=dag)
         stop_task = DummyOperator(task_id="stop", dag=dag)
