@@ -3,7 +3,7 @@ from functools import wraps
 
 import airflow
 from airflow.api.common import delete_dag
-from airflow.exceptions import DagFileExists, DagNotFound
+from airflow.exceptions import DagNotFound
 from airflow.utils.log.logging_mixin import LoggingMixin
 from flask import current_app, flash, g, redirect, request, url_for
 from flask_appbuilder import BaseView as AppBuilderBaseView
@@ -145,11 +145,14 @@ class DagenFABView(AppBuilderBaseView, LoggingMixin):
         except DagNotFound:
             flash("DAG with id {} not found. Cannot delete".format(dag_id), 'error')
             return self._redirect_home()
-        except DagFileExists:
-            flash("Dag id {} is still in DagBag. "
-                  "Remove the DAG file first.".format(dag_id),
-                  'error')
-            return self._redirect_home()
+        except Exception as e:
+            if "still in DagBag" in str(e) or "DAG file" in str(e):
+                flash("Dag id {} is still in DagBag. "
+                      "Remove the DAG file first.".format(dag_id),
+                      'error')
+                return self._redirect_home()
+            else:
+                raise
 
         flash("Deleting DAG with id {}. May take a couple minutes to fully"
               " disappear.".format(dag_id))

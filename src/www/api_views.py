@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime
-from airflow.www.extensions.init_views import csrf
+from flask_wtf.csrf import CSRFProtect
+csrf = CSRFProtect()
 from flask import (Blueprint, current_app, flash, g, jsonify, make_response,
                    redirect, request, url_for)
 from functools import wraps
