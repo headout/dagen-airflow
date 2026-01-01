@@ -24,11 +24,12 @@ from dagen.query import DagenDagQueryset
 from sqlalchemy.orm import joinedload
 
 
-list_py_file_paths = partial(
-    list_py_file_paths,
-    include_examples=False,
-    safe_mode=False
-)
+# In Airflow 3.0, list_py_file_paths no longer accepts include_examples or safe_mode
+# list_py_file_paths = partial(
+#     list_py_file_paths,
+#     include_examples=False,
+#     safe_mode=False
+# )
 
 
 class TemplateLoader(LoggingMixin):
