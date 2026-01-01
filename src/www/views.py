@@ -167,7 +167,7 @@ class DagenFABView(AppBuilderBaseView, LoggingMixin):
         tmpls = get_template_loader().templates
         dag_id = request.args.get('dag_id')
         dbDag = DagenDagQueryset().get_dag(dag_id)
-        template = tmpls[dbDag. template_id]
+        template = tmpls[dbDag.template_id]
         return self.render_template(
             'dagen/detail.html',
             dbDag=dbDag,
