@@ -1,10 +1,10 @@
 import logging
 from datetime import datetime
-from airflow.www.app import csrf
+from airflow.www.extensions.init_views import csrf
 from flask import (Blueprint, current_app, flash, g, jsonify, make_response,
                    redirect, request, url_for)
 from functools import wraps
-from airflow.api.common.experimental.trigger_dag import trigger_dag
+from airflow.api.common.trigger_dag import trigger_dag
 from airflow.configuration import conf
 from airflow.utils.session import create_session
 from croniter import croniter

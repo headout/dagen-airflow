@@ -2,7 +2,7 @@ import logging
 from functools import wraps
 
 import airflow
-from airflow.api.common.experimental import delete_dag
+from airflow.api.common import delete_dag
 from airflow.exceptions import DagFileExists, DagNotFound
 from airflow.utils.log.logging_mixin import LoggingMixin
 from flask import current_app, flash, g, redirect, request, url_for
