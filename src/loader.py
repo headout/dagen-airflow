@@ -10,8 +10,6 @@ from airflow.configuration import conf
 try:
     # Airflow v3.1.5+
     from airflow.utils.file import list_py_file_paths
-    list_py_file_paths = partial(
-        list_py_file_paths, include_smart_sensor=False)
 except ImportError:
     from airflow.utils.dag_processing import list_py_file_paths
 
