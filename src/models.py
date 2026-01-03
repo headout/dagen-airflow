@@ -3,14 +3,13 @@ from functools import cached_property
 
 from airflow.models.base import ID_LEN
 from airflow.sdk import timezone
-from airflow.utils.dates import cron_presets
 from airflow.utils.db import provide_session
 from airflow.utils.sqlalchemy import UtcDateTime
 from croniter import croniter
 from dagen.serialization import dumps, loads
 from flask_appbuilder.security.sqla.models import User
 from sqlalchemy import Column, ForeignKey, Integer, String, Text, event
-from sqlalchemy.orm import joinedload, relationship, sessionmaker
+from sqlalchemy.orm import relationship, sessionmaker
 from airflow.models.base import Base
 
 logger = logging.getLogger(__name__)
@@ -19,33 +18,49 @@ logger = logging.getLogger(__name__)
 class DagenDag(Base):
     __tablename__ = 'dagen_dag'
     __table_args__ = {'extend_existing': True}
+
     VALID_ATTRIBUTES = (
-        'dag_id', 'template_id', 'category', 'created_at', '_live_version',
-        'updated_at'
+        'dag_id',
+        'template_id',
+        'category',
+        'created_at',
+        '_live_version',
+        'updated_at',
     )
 
     dag_id = Column(String(ID_LEN), primary_key=True)
     template_id = Column(String(ID_LEN), index=True, nullable=False)
     category = Column(String(50), default="default", nullable=False)
     _live_version = Column('live_version', Integer)
+
     created_at = Column(
         UtcDateTime, index=True, default=timezone.utcnow, nullable=False
     )
     updated_at = Column(
-        UtcDateTime, index=True, nullable=False,
-        default=timezone.utcnow, onupdate=timezone.utcnow
+        UtcDateTime,
+        index=True,
+        nullable=False,
+        default=timezone.utcnow,
+        onupdate=timezone.utcnow,
     )
 
-    versions = relationship('DagenDagVersion', back_populates='dag')
+    versions = relationship(
+        'DagenDagVersion',
+        back_populates='dag',
+        cascade='all, delete-orphan',
+    )
+
     @cached_property
     def live_version(self):
-        from dagen.models import DagenDagVersion
-        from dagen.query import DagenDagVersionQueryset
         if self._live_version is None:
             return None
-        return DagenDagVersionQueryset().get_dag_versions(self.dag_id).filter(
-            DagenDagVersion.version == self._live_version
-        ).first()
+        from dagen.query import DagenDagVersionQueryset
+        return (
+            DagenDagVersionQueryset()
+            .get_dag_versions(self.dag_id)
+            .filter(DagenDagVersion.version == self._live_version)
+            .first()
+        )
 
     def __str__(self):
         version = f'v{self._live_version}' if self.is_published else 'Disabled'
@@ -71,24 +86,18 @@ class DagenDag(Base):
 
     @provide_session
     def get_version(self, version, session=None):
-        return session.query(DagenDagVersion).get({
-            'dag_id': self.dag_id,
-            'version': version
-        })
+        return session.query(DagenDagVersion).get(
+            {'dag_id': self.dag_id, 'version': version}
+        )
 
     def __getattr__(self, name):
         if hasattr(DagenDagVersion, name):
             return getattr(self.live_version, name)
         raise AttributeError
 
-    def __eq__(self, value):
-        if isinstance(value, type(self)):
-            return self.dict_repr == value.dict_repr
-        return super().__eq__(value)
-
     @cached_property
     def dict_repr(self):
-        return self.toDict(DagenDag.VALID_ATTRIBUTES)
+        return self.toDict(self.VALID_ATTRIBUTES)
 
     def toDict(self, keep_attrs):
         return {attr: getattr(self, attr, None) for attr in keep_attrs}
@@ -97,50 +106,68 @@ class DagenDag(Base):
 class DagenDagVersion(Base):
     __tablename__ = 'dagen_dag_version'
     __table_args__ = {'extend_existing': True}
+
     VALID_ATTRIBUTES = (
-        'dag_id', 'version', 'dag_options', 'created_at', 'schedule_interval',
-        'creator_str', 'approver_str', 'approved_at'
+        'dag_id',
+        'version',
+        'dag_options',
+        'created_at',
+        'schedule_interval',
+        'creator_str',
+        'approver_str',
+        'approved_at',
     )
+
     EDIT_ATTRIBUTES = (
-        'dag_id', 'dag_options', 'schedule_interval',
+        'dag_id',
+        'dag_options',
+        'schedule_interval',
     )
 
     dag_id = Column(
         ForeignKey("dagen_dag.dag_id", ondelete='CASCADE'),
+        primary_key=True,
         index=True,
-        primary_key=True
     )
     version = Column(Integer, primary_key=True)
+
     _options = Column('dag_options', Text, default='{}', nullable=False)
+
     created_at = Column(
         UtcDateTime, index=True, default=timezone.utcnow, nullable=False
     )
+
     _schedule_interval = Column(
-        'schedule_interval', String(50), nullable=False)
-    # Foreign keys to FAB's ab_user model
-    creator_id = Column('creator', ForeignKey(User.id, ondelete='SET NULL'))
-    approver_id = Column('approver', ForeignKey(User.id, ondelete='SET NULL'))
+        'schedule_interval', String(50), nullable=False
+    )
+
+    # Correct FK definitions
+    creator_id = Column(
+        'creator',
+        Integer,
+        ForeignKey("ab_user.id", ondelete='SET NULL'),
+    )
+    approver_id = Column(
+        'approver',
+        Integer,
+        ForeignKey("ab_user.id", ondelete='SET NULL'),
+    )
+
     approved_at = Column(UtcDateTime, index=True)
 
     dag = relationship('DagenDag', back_populates='versions')
 
-    @cached_property
-    def creator(self):
-        if not self.creator_id:
-            return None
-        from sqlalchemy.orm import sessionmaker
-        from airflow.utils.db import provide_session
-        session = provide_session()
-        return session.query(User).get(self.creator_id)
-
-    @cached_property
-    def approver(self):
-        if not self.approver_id:
-            return None
-        from sqlalchemy.orm import sessionmaker
-        from airflow.utils.db import provide_session
-        session = provide_session()
-        return session.query(User).get(self.approver_id)
+    # Proper ORM relationships (fixes mapper failure)
+    creator = relationship(
+        User,
+        foreign_keys=[creator_id],
+        lazy='joined',
+    )
+    approver = relationship(
+        User,
+        foreign_keys=[approver_id],
+        lazy='joined',
+    )
 
     def __str__(self):
         return f'{self.dag_id} - v{self.version}'
@@ -150,7 +177,8 @@ class DagenDagVersion(Base):
         if schedule_interval is not None:
             self.set_schedule_interval(schedule_interval)
         self.set_options(options)
-        self.creator_id = creator
+        if creator is not None:
+            self.creator_id = creator
 
     def set_schedule_interval(self, schedule_interval):
         self._schedule_interval = schedule_interval
@@ -164,11 +192,11 @@ class DagenDagVersion(Base):
 
     @cached_property
     def creator_str(self):
-        return str(self.creator)
+        return str(self.creator) if self.creator else None
 
     @cached_property
     def approver_str(self):
-        return str(self.approver)
+        return str(self.approver) if self.approver else None
 
     @cached_property
     def dag_options(self):
@@ -177,12 +205,6 @@ class DagenDagVersion(Base):
     @cached_property
     def schedule_interval(self):
         return self._schedule_interval
-    #     if self._schedule_interval == '@once':
-    #         interval = None
-    #     else:
-    #         interval = cron_presets.get(
-    #             self._schedule_interval, self._schedule_interval)
-    #     return interval
 
     @cached_property
     def cron_interval(self):
@@ -196,18 +218,15 @@ class DagenDagVersion(Base):
         self.approver_id = user
         self.approved_at = timezone.utcnow()
 
-    def __eq__(self, value):
-        if isinstance(value, type(self)):
-            return self.toDict(DagenDagVersion.EDIT_ATTRIBUTES) == value.toDict(DagenDagVersion.EDIT_ATTRIBUTES)
-        return super().__eq__(value)
-
     @cached_property
     def dict_repr(self):
-        return self.toDict(DagenDagVersion.VALID_ATTRIBUTES)
+        return self.toDict(self.VALID_ATTRIBUTES)
 
     def get_options_for_form(self):
         data = dict(self.dag_options)
-        data['synchronized_runs'] = (data.pop('max_active_runs', None) == 1)
+        data['synchronized_runs'] = (
+            data.pop('max_active_runs', None) == 1
+        )
         return data
 
     def toDict(self, keep_attrs):
@@ -223,14 +242,14 @@ class DagenDagVersion(Base):
 @event.listens_for(DagenDagVersion, 'before_insert')
 def autoincrement_version(mapper, connection, target):
     """
-        Hack needed since MySQL InnoDB engine doesn't support
-        having one of the composite primary keys as autoincrement
-
-        SO - https://stackoverflow.com/a/18949951/2674983
+    Needed since MySQL InnoDB doesn't support autoincrement
+    on composite primary keys.
     """
     session = sessionmaker(bind=connection)()
     if target.version is None:
         target.version = (
             session.query(DagenDagVersion)
             .filter(DagenDagVersion.dag_id == target.dag_id)
-        ).count() + 1
+            .count()
+            + 1
+        )
