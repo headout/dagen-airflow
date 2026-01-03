@@ -9,7 +9,7 @@ from croniter import croniter
 from dagen.serialization import dumps, loads
 from flask_appbuilder.security.sqla.models import User
 from sqlalchemy import Column, ForeignKey, Integer, String, Text, event
-from sqlalchemy.orm import foreign, relationship, remote, sessionmaker
+from sqlalchemy.orm import relationship, sessionmaker
 from airflow.models.base import Base
 
 logger = logging.getLogger(__name__)
@@ -142,13 +142,15 @@ class DagenDagVersion(Base):
     dag = relationship('DagenDag', back_populates='versions')
     creator = relationship(
         User,
-        primaryjoin=lambda: foreign(DagenDagVersion.creator_id) == remote(User.id),
-        lazy='select'
+        primaryjoin=lambda: DagenDagVersion.creator_id == User.id,
+        foreign_keys=[creator_id],
+        viewonly=True
     )
     approver = relationship(
         User,
-        primaryjoin=lambda: foreign(DagenDagVersion.approver_id) == remote(User.id),
-        lazy='select'
+        primaryjoin=lambda: DagenDagVersion.approver_id == User.id,
+        foreign_keys=[approver_id],
+        viewonly=True
     )
 
     def __str__(self):
