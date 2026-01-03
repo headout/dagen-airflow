@@ -10,16 +10,15 @@ from croniter import croniter
 from dagen.serialization import dumps, loads
 from flask_appbuilder.security.sqla.models import User
 from sqlalchemy import Column, ForeignKey, Integer, String, Text, event
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import joinedload, relationship, sessionmaker
-
-Base = declarative_base()
+from airflow.models.base import Base
 
 logger = logging.getLogger(__name__)
 
 
 class DagenDag(Base):
     __tablename__ = 'dagen_dag'
+    __table_args__ = {'extend_existing': True}
     VALID_ATTRIBUTES = (
         'dag_id', 'template_id', 'category', 'created_at', '_live_version',
         'updated_at'
@@ -95,6 +94,7 @@ class DagenDag(Base):
 
 class DagenDagVersion(Base):
     __tablename__ = 'dagen_dag_version'
+    __table_args__ = {'extend_existing': True}
     VALID_ATTRIBUTES = (
         'dag_id', 'version', 'dag_options', 'created_at', 'schedule_interval',
         'creator_str', 'approver_str', 'approved_at'
