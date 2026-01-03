@@ -123,8 +123,24 @@ class DagenDagVersion(Base):
     approved_at = Column(UtcDateTime, index=True)
 
     dag = relationship('DagenDag', back_populates='versions')
-    creator = relationship(User, foreign_keys=[creator_id], lazy='immediate')
-    approver = relationship(User, foreign_keys=[approver_id], lazy='immediate')
+
+    @cached_property
+    def creator(self):
+        if not self.creator_id:
+            return None
+        from sqlalchemy.orm import sessionmaker
+        from airflow.utils.db import provide_session
+        session = provide_session()
+        return session.query(User).get(self.creator_id)
+
+    @cached_property
+    def approver(self):
+        if not self.approver_id:
+            return None
+        from sqlalchemy.orm import sessionmaker
+        from airflow.utils.db import provide_session
+        session = provide_session()
+        return session.query(User).get(self.approver_id)
 
     def __str__(self):
         return f'{self.dag_id} - v{self.version}'
