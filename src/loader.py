@@ -19,7 +19,6 @@ from airflow.sdk.execution_time.timeout import timeout
 from dagen.config import config
 from dagen.dag_templates import BaseDagTemplate
 from dagen.exceptions import TemplateNotFoundError
-from dagen.models import DagenDag, DagenDagVersion
 from dagen.query import DagenDagQueryset
 from sqlalchemy.orm import joinedload
 
