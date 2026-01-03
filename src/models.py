@@ -142,13 +142,13 @@ class DagenDagVersion(Base):
     dag = relationship('DagenDag', back_populates='versions')
     creator = relationship(
         User,
-        primaryjoin='DagenDagVersion.creator_id == User.id',
+        primaryjoin=lambda: DagenDagVersion.creator_id == User.id,
         foreign_keys=[creator_id],
         lazy='select'
     )
     approver = relationship(
         User,
-        primaryjoin='DagenDagVersion.approver_id == User.id',
+        primaryjoin=lambda: DagenDagVersion.approver_id == User.id,
         foreign_keys=[approver_id],
         lazy='select'
     )
