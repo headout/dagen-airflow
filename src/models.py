@@ -2,7 +2,7 @@ import logging
 from functools import cached_property
 
 from airflow.models.base import ID_LEN
-from airflow.utils import timezone
+from airflow.sdk import timezone
 from airflow.utils.dates import cron_presets
 from airflow.utils.db import provide_session
 from airflow.utils.sqlalchemy import UtcDateTime
