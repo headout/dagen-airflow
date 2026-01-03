@@ -39,8 +39,8 @@ class DagenDag(Base):
     versions = relationship('DagenDagVersion', back_populates='dag')
     live_version = relationship(
         'DagenDagVersion',
-        primaryjoin='and_(DagenDagVersion.dag_id == dag_id, '
-                    'DagenDagVersion.version == _live_version)',
+        primaryjoin='and_(DagenDagVersion.dag_id == DagenDag.dag_id, '
+                    'DagenDagVersion.version == DagenDag._live_version)',
         foreign_keys='[DagenDagVersion.dag_id, DagenDagVersion.version]',
         lazy='immediate',
         uselist=False,
