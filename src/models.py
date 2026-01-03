@@ -37,14 +37,15 @@ class DagenDag(Base):
     )
 
     versions = relationship('DagenDagVersion', back_populates='dag')
-    live_version = relationship(
-        'DagenDagVersion',
-        primaryjoin='and_(DagenDagVersion.dag_id == DagenDag.dag_id, '
-                    'DagenDagVersion.version == DagenDag._live_version)',
-        lazy='immediate',
-        uselist=False,
-        viewonly=True
-    )
+    @cached_property
+    def live_version(self):
+        from dagen.models import DagenDagVersion
+        from dagen.query import DagenDagVersionQueryset
+        if self._live_version is None:
+            return None
+        return DagenDagVersionQueryset().get_dag_versions(self.dag_id).filter(
+            DagenDagVersion.version == self._live_version
+        ).first()
 
     def __str__(self):
         version = f'v{self._live_version}' if self.is_published else 'Disabled'
