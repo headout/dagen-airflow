@@ -10,7 +10,7 @@ from croniter import croniter
 from dagen.serialization import dumps, loads
 from flask_appbuilder.security.sqla.models import User
 from sqlalchemy import Column, ForeignKey, Integer, String, Text, event
-from sqlalchemy.orm import joinedload, relationship, sessionmaker
+from sqlalchemy.orm import joinedload, relationship, sessionmaker, foreign
 from airflow.models.base import Base
 
 logger = logging.getLogger(__name__)
@@ -39,8 +39,8 @@ class DagenDag(Base):
     versions = relationship('DagenDagVersion', back_populates='dag')
     live_version = relationship(
         'DagenDagVersion',
-        primaryjoin='and_(DagenDagVersion.dag_id == DagenDag.dag_id, '
-                    'DagenDagVersion.version == DagenDag._live_version)',
+        primaryjoin='and_(foreign(DagenDagVersion.dag_id) == DagenDag.dag_id, '
+                    'foreign(DagenDagVersion.version) == DagenDag._live_version)',
         lazy='immediate',
         uselist=False
     )
