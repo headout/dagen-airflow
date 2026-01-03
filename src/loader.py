@@ -15,7 +15,7 @@ except ImportError:
 
 from airflow.utils.db import provide_session
 from airflow.utils.log.logging_mixin import LoggingMixin
-from airflow.utils.timeout import timeout
+from airflow.sdk.execution_time.timeout import timeout
 from dagen.config import config
 from dagen.dag_templates import BaseDagTemplate
 from dagen.exceptions import TemplateNotFoundError
