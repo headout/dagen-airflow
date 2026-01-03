@@ -135,34 +135,13 @@ class DagenDagVersion(Base):
         'schedule_interval', String(50), nullable=False
     )
 
-    creator_id = Column(
-        'creator',
-        Integer,
-    )
-    approver_id = Column(
-        'approver',
-        Integer,
-    )
-
+    creator_id = Column('creator', Integer, ForeignKey(User.id, ondelete='SET NULL'))
+    approver_id = Column('approver', Integer, ForeignKey(User.id, ondelete='SET NULL'))
     approved_at = Column(UtcDateTime, index=True)
 
     dag = relationship('DagenDag', back_populates='versions')
-
-    creator = relationship(
-        User,
-        primaryjoin=creator_id == User.__table__.c.id,
-        foreign_keys=[creator_id],
-        uselist=False,
-        viewonly=True,
-    )
-
-    approver = relationship(
-        User,
-        primaryjoin=approver_id == User.__table__.c.id,
-        foreign_keys=[approver_id],
-        uselist=False,
-        viewonly=True,
-    )
+    creator = relationship(User, foreign_keys=[creator_id], lazy='joined')
+    approver = relationship(User, foreign_keys=[approver_id], lazy='joined')
 
     def __str__(self):
         return f'{self.dag_id} - v{self.version}'
