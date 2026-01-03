@@ -9,7 +9,7 @@ from croniter import croniter
 from dagen.serialization import dumps, loads
 from flask_appbuilder.security.sqla.models import User
 from sqlalchemy import Column, ForeignKey, Integer, String, Text, event
-from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.orm import foreign, relationship, sessionmaker
 from airflow.models.base import Base
 
 logger = logging.getLogger(__name__)
@@ -118,12 +118,6 @@ class DagenDagVersion(Base):
         'approved_at',
     )
 
-    EDIT_ATTRIBUTES = (
-        'dag_id',
-        'dag_options',
-        'schedule_interval',
-    )
-
     dag_id = Column(
         ForeignKey("dagen_dag.dag_id", ondelete='CASCADE'),
         primary_key=True,
@@ -141,33 +135,35 @@ class DagenDagVersion(Base):
         'schedule_interval', String(50), nullable=False
     )
 
-    # Correct FK definitions
     creator_id = Column(
         'creator',
         Integer,
-        ForeignKey("ab_user.id", ondelete='SET NULL'),
+        ForeignKey("ab_user.id", ondelete="SET NULL"),
     )
     approver_id = Column(
         'approver',
         Integer,
-        ForeignKey("ab_user.id", ondelete='SET NULL'),
+        ForeignKey("ab_user.id", ondelete="SET NULL"),
     )
 
     approved_at = Column(UtcDateTime, index=True)
 
     dag = relationship('DagenDag', back_populates='versions')
 
-    # Proper ORM relationships (fixes mapper failure)
     creator = relationship(
         User,
-        foreign_keys=[creator_id],
-        lazy='joined',
+        primaryjoin="foreign(DagenDagVersion.creator_id) == User.id",
+        viewonly=True,
+        lazy="joined",
     )
+
     approver = relationship(
         User,
-        foreign_keys=[approver_id],
-        lazy='joined',
+        primaryjoin="foreign(DagenDagVersion.approver_id) == User.id",
+        viewonly=True,
+        lazy="joined",
     )
+
 
     def __str__(self):
         return f'{self.dag_id} - v{self.version}'
