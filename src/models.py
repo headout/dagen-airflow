@@ -123,9 +123,8 @@ class DagenDagVersion(Base):
     approved_at = Column(UtcDateTime, index=True)
 
     dag = relationship('DagenDag', back_populates='versions')
-    creator = relationship(User, foreign_keys=(creator_id,), lazy='immediate')
-    approver = relationship(User, foreign_keys=(
-        approver_id,), lazy='immediate')
+    creator = relationship(User, foreign_keys=[creator_id], lazy='immediate')
+    approver = relationship(User, foreign_keys=[approver_id], lazy='immediate')
 
     def __str__(self):
         return f'{self.dag_id} - v{self.version}'
