@@ -152,18 +152,17 @@ class DagenDagVersion(Base):
 
     creator = relationship(
         User,
-        primaryjoin="foreign(DagenDagVersion.creator_id) == User.id",
+        primaryjoin=lambda: foreign(DagenDagVersion.creator_id) == User.id,
         viewonly=True,
         lazy="joined",
     )
 
     approver = relationship(
         User,
-        primaryjoin="foreign(DagenDagVersion.approver_id) == User.id",
+        primaryjoin=lambda: foreign(DagenDagVersion.approver_id) == User.id,
         viewonly=True,
         lazy="joined",
     )
-
 
     def __str__(self):
         return f'{self.dag_id} - v{self.version}'
