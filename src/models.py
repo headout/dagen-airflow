@@ -135,8 +135,8 @@ class DagenDagVersion(Base):
         'schedule_interval', String(50), nullable=False
     )
 
-    creator_id = Column('creator', Integer, ForeignKey(User.id, ondelete='SET NULL'))
-    approver_id = Column('approver', Integer, ForeignKey(User.id, ondelete='SET NULL'))
+    creator_id = Column('creator', Integer, ForeignKey('ab_user.id', ondelete='SET NULL'))
+    approver_id = Column('approver', Integer, ForeignKey('ab_user.id', ondelete='SET NULL'))
     approved_at = Column(UtcDateTime, index=True)
 
     dag = relationship('DagenDag', back_populates='versions')
