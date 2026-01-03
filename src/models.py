@@ -9,7 +9,7 @@ from croniter import croniter
 from dagen.serialization import dumps, loads
 from flask_appbuilder.security.sqla.models import User
 from sqlalchemy import Column, ForeignKey, Integer, String, Text, event
-from sqlalchemy.orm import foreign, relationship, sessionmaker
+from sqlalchemy.orm import relationship, sessionmaker
 from airflow.models.base import Base
 
 logger = logging.getLogger(__name__)
@@ -138,12 +138,10 @@ class DagenDagVersion(Base):
     creator_id = Column(
         'creator',
         Integer,
-        ForeignKey("ab_user.id", ondelete="SET NULL"),
     )
     approver_id = Column(
         'approver',
         Integer,
-        ForeignKey("ab_user.id", ondelete="SET NULL"),
     )
 
     approved_at = Column(UtcDateTime, index=True)
@@ -152,14 +150,18 @@ class DagenDagVersion(Base):
 
     creator = relationship(
         User,
+        primaryjoin=creator_id == User.__table__.c.id,
         foreign_keys=[creator_id],
         uselist=False,
+        viewonly=True,
     )
 
     approver = relationship(
         User,
+        primaryjoin=approver_id == User.__table__.c.id,
         foreign_keys=[approver_id],
         uselist=False,
+        viewonly=True,
     )
 
     def __str__(self):
@@ -234,10 +236,6 @@ class DagenDagVersion(Base):
 
 @event.listens_for(DagenDagVersion, 'before_insert')
 def autoincrement_version(mapper, connection, target):
-    """
-    Needed since MySQL InnoDB doesn't support autoincrement
-    on composite primary keys.
-    """
     session = sessionmaker(bind=connection)()
     if target.version is None:
         target.version = (
