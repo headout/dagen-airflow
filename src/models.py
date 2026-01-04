@@ -36,11 +36,11 @@ class DagenDag(Base):
         default=timezone.utcnow, onupdate=timezone.utcnow
     )
 
-    versions = relationship('DagenDagVersion', back_populates='dag')
+    versions = relationship('dagen.models.DagenDagVersion', back_populates='dag')
     live_version = relationship(
-        'DagenDagVersion',
-        primaryjoin='and_(DagenDagVersion.dag_id == DagenDag.dag_id, '
-                    'DagenDagVersion.version == DagenDag._live_version)',
+        'dagen.models.DagenDagVersion',
+        primaryjoin='and_(dagen.models.DagenDagVersion.dag_id == dagen.models.DagenDag.dag_id, '
+                    'dagen.models.DagenDagVersion.version == dagen.models.DagenDag._live_version)',
         lazy='immediate',
         uselist=False
     )
@@ -126,7 +126,7 @@ class DagenDagVersion(Base):
     )
     approved_at = Column(UtcDateTime, index=True)
 
-    dag = relationship('DagenDag', back_populates='versions')
+    dag = relationship('dagen.models.DagenDag', back_populates='versions')
     creator = relationship(User, foreign_keys=(creator_id,), lazy='immediate')
     approver = relationship(User, foreign_keys=(approver_id,), lazy='immediate')
 
