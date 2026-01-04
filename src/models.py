@@ -9,8 +9,8 @@ from airflow.utils.sqlalchemy import UtcDateTime
 from croniter import croniter
 from dagen.serialization import dumps, loads
 from flask_appbuilder.security.sqla.models import User
-from sqlalchemy import Column, ForeignKey, Integer, String, Text, event
-from sqlalchemy.orm import joinedload, relationship, sessionmaker
+from sqlalchemy import Column, ForeignKey, Integer, String, Text, and_, event
+from sqlalchemy.orm import foreign, joinedload, relationship, sessionmaker
 from airflow.models.base import Base
 
 logger = logging.getLogger(__name__)
@@ -39,9 +39,11 @@ class DagenDag(Base):
     versions = relationship('dagen.models.DagenDagVersion', back_populates='dag')
     live_version = relationship(
         'dagen.models.DagenDagVersion',
-        primaryjoin='and_(dagen.models.DagenDagVersion.dag_id == dagen.models.DagenDag.dag_id, '
-                    'dagen.models.DagenDagVersion.version == dagen.models.DagenDag._live_version)',
-        lazy='immediate',
+        primaryjoin=lambda: and_(
+            foreign(DagenDagVersion.dag_id) == DagenDag.dag_id,
+            foreign(DagenDagVersion.version) == DagenDag._live_version
+        ),
+        viewonly=True,
         uselist=False
     )
 
