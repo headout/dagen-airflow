@@ -22,7 +22,7 @@ async_loop = asyncio.get_event_loop()
 class BulkSyncDagenForm(FlaskForm):
     template_id = SelectField(
         'Template ID',
-        validators=(validators.required(),),
+        validators=(validators.DataRequired(),),
     )
     csv_data = FileField(
         'Choose CSV file',
