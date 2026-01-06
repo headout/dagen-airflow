@@ -7,7 +7,7 @@ from airflow.contrib.sensors.aws_sqs_sensor import SQSSensor
 from airflow.operators.bash import BashOperator
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.utils.dates import days_ago
-from wtforms.fields import StringField, TextField
+from wtforms.fields import StringField
 
 from dagen.dag_templates import BaseDagTemplate
 
