@@ -4,37 +4,17 @@ from airflow.plugins_manager import AirflowPlugin
 from airflow.utils.log.logging_mixin import LoggingMixin
 from dagen.migrations.utils import initdb
 from dagen.utils import get_template_loader
-from dagen.www.api_views import dagen_rest_bp
-from dagen.www.views import DagenFABView
-from flask import Blueprint
-
-ab_dagen_view = DagenFABView()
-ab_dagen_package = {
-    'name': 'List Dagen DAGs',
-    'category': 'Dagen',
-    'view': ab_dagen_view
-}
-ab_dagen_create_mitem = {
-    'name': 'Create Dagen DAG',
-    'category': 'Dagen',
-    'category_icon': 'fa-th',
-    'href': '/dagen/dags/create'
-}
-
-dagen_bp = Blueprint(
-    "dagen_bp",
-    __name__,
-    template_folder='www/templates',
-    static_folder='www/static',
-    static_url_path='/static/dagen'
-)
+from dagen.www.api_views import dagen_fastapi_app
 
 
 class DagenPlugin(AirflowPlugin, LoggingMixin):
     name = 'dagen'
-    appbuilder_views = (ab_dagen_package,)
-    appbuilder_menu_items = (ab_dagen_create_mitem,)
-    flask_blueprints = (dagen_bp, dagen_rest_bp)
+    # Airflow 3.x: use fastapi_apps instead of flask_blueprints/appbuilder_views
+    fastapi_apps = [{
+        "name": "dagen_api",
+        "app": dagen_fastapi_app,
+        "url_prefix": "/dagen/api",
+    }]
 
     log = logging.root.getChild(f'{__name__}.{"DagenPlugin"}')
 

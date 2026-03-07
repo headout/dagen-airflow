@@ -1,202 +1,130 @@
 import logging
-from datetime import datetime
-try:
-    from airflow.www_rbac.app import csrf
-except ImportError:
-    # Airflow 2.0.0
-    from airflow.www.app import csrf
-from flask import (Blueprint, current_app, flash, g, jsonify, make_response,
-                   redirect, request, url_for)
+from datetime import datetime, timezone
 from functools import wraps
-from airflow.api.common.experimental.trigger_dag import trigger_dag
+from typing import Any
+
+from fastapi import FastAPI, Header, HTTPException, Request
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+
 from airflow.configuration import conf
 from airflow.utils.session import create_session
+from airflow.models.dagrun import DagRun
+from airflow.utils.types import DagRunType
 from croniter import croniter
-from datetime import datetime, timezone
 from dagen.models import DagenDag, DagenDagVersion
 from dagen.query import DagenDagQueryset, DagenDagVersionQueryset
-from dagen.www.utils import login_required
-from flask_appbuilder import expose, has_access
 from dagen.utils import get_template_loader
 from dagen.internal import refresh_dagbag
-
-dagen_rest_bp = Blueprint('DagenRestView', __name__, url_prefix='/dagen/api')
 
 log = logging.root.getChild(f'{__name__}.{"DagenRestView"}')
 
 EXTERNAL_SCHEDULER_USER_ID = int(conf.get("ergo", "external_scheduler_user_id"))
 API_KEY = conf.get("ergo", "api_key")
 
-@csrf.exempt
-@dagen_rest_bp.route('/dags/approve/all', methods=('POST',))
-@login_required
+dagen_fastapi_app = FastAPI(title="Dagen REST API")
+
+
+# --- Auth helpers ---
+
+def verify_api_key(x_api_key: str = Header(None)):
+    if x_api_key != API_KEY:
+        raise HTTPException(status_code=403, detail="Unauthorized")
+
+
+# --- Request models ---
+
+class TriggerDagRunRequest(BaseModel):
+    dag_id: str
+    execution_date_time: str
+    conf: dict[str, Any] = {}
+
+
+class UpdateScheduleRequest(BaseModel):
+    dag_id: str
+    schedule_interval: str
+
+
+class RevertRequest(BaseModel):
+    dag_id: str
+
+
+# --- Endpoints ---
+
+@dagen_fastapi_app.post("/dags/approve/all")
 def approve_all():
-    user_id = g.user.id
-    qs = DagenDagVersionQueryset()
-    unapproved_versions = qs.get_all_current_unapproved()
-    qs.approve_all(unapproved_versions, user_id).done()
-    return _render_json({
-        "count_approved": len(unapproved_versions)
-    })
-
-
-def _render_json(data, status=200):
-    response = make_response(jsonify(**data), status)
-    response.headers["Content-Type"] = "application/json"
-    return response
-
-
-#supports selenium team's requirement - optimus bot
-@csrf.exempt
-@dagen_rest_bp.route('/api/dags/ext/create', methods=('POST',))
-@login_required
-def create_dag_json():
+    """Approve all unapproved DAG versions. Uses external scheduler user."""
     try:
-    
-        data = request.json
-        data["start_date"] =  datetime.strptime(data.get('start_date'), "%d-%m-%Y")
-        if not data:
-            return jsonify({"error": "No JSON data provided"}), 400
-
-        tmpls = get_template_loader().template_classes
-        forms = {key: tmpl.as_form() for key, tmpl in tmpls.items()}
-
-        tmpl_id = data.get('template_id')
-        if not tmpl_id or tmpl_id not in forms:
-            return jsonify({"error": "Invalid or missing template_id"}), 400
-
-        form = forms[tmpl_id]
-        form.process(formdata=None, data=data)
-
-        if form.validate():
-            ret = form.create(template_id=tmpl_id, user=g.user)
-            if ret:
-                msg = f'"{ret.dag_id}" created successfully'
-                refresh_dagbag(dag_id=ret.dag_id)
-                return jsonify({
-                    "message": msg,
-                    "dag_id": ret.dag_id,
-                    "template_id": tmpl_id
-                }), 201
-            else:
-                return jsonify({"error": "Failed to create DAG"}), 500
-        else:
-            return jsonify({"error": "Validation failed", "errors": form.errors}), 400
-
+        user_id = EXTERNAL_SCHEDULER_USER_ID
+        qs = DagenDagVersionQueryset()
+        unapproved_versions = qs.get_all_current_unapproved()
+        qs.approve_all(unapproved_versions, user_id).done()
+        return {"count_approved": len(unapproved_versions)}
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        log.exception("Failed to approve all")
+        raise HTTPException(status_code=500, detail=str(e))
 
-def require_api_key(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        key = request.headers.get("X-API-Key")
-        if key != API_KEY:
-            return jsonify({"error": "Unauthorized"}), 403
-        return f(*args, **kwargs)
-    return decorated
 
-#
-@csrf.exempt
-@dagen_rest_bp.route("/dags/run", methods=["POST"])
-@require_api_key
-def trigger_dag_run():
-    """
-    Trigger a manual DAG run with a specific execution datetime and optional configuration.
-
-    Expects a JSON payload:
-        - dag_id (str): Required. ID of the DAG to trigger.
-        - execution_date_time (str): Required. ISO 8601 datetime string with timezone (e.g., '2025-06-23T10:30:00+00:00').
-        - conf (dict): Optional. Configuration dictionary passed to the DAG.
-
-    Returns:
-        Response 200: DAG successfully triggered, returns run_id and execution_date_time.
-        Response 400: Missing or invalid parameters.
-        Response 500: Internal error while triggering DAG.
-    """
+@dagen_fastapi_app.post("/dags/run")
+def trigger_dag_run(req: TriggerDagRunRequest, x_api_key: str = Header(None)):
+    verify_api_key(x_api_key)
     try:
-        data = request.get_json(force=True)
-
-        dag_id = data.get("dag_id")
-        execution_date_time_str = data.get("execution_date_time")
-        conf = data.get("conf", {})
-
-        if not dag_id:
-            return jsonify({"error": "Missing 'dag_id' in request body"}), 400
-
-        if not execution_date_time_str:
-            return jsonify({"error": "Missing 'execution_date_time' in request body"}), 400
-
         try:
-            exec_date = datetime.fromisoformat(execution_date_time_str)
+            exec_date = datetime.fromisoformat(req.execution_date_time)
         except ValueError:
-            return jsonify({"error": "Invalid 'execution_date_time' format, must be ISO 8601"}), 400
+            raise HTTPException(status_code=400, detail="Invalid 'execution_date_time' format, must be ISO 8601")
 
         run_id = f"manual__{exec_date.isoformat()}"
 
-        dag_run = trigger_dag(
-            dag_id=dag_id,
-            run_id=run_id,
-            execution_date=exec_date,
-            conf=conf,
-        )
+        with create_session() as session:
+            dag_run = DagRun(
+                dag_id=req.dag_id,
+                run_id=run_id,
+                execution_date=exec_date,
+                run_type=DagRunType.MANUAL,
+                conf=req.conf,
+            )
+            session.add(dag_run)
+            session.commit()
 
-        return jsonify({
-            "message": f"DAG '{dag_id}' triggered successfully",
-            "run_id": dag_run.run_id,
+        return {
+            "message": f"DAG '{req.dag_id}' triggered successfully",
+            "run_id": run_id,
             "execution_date_time": exec_date.isoformat()
-        }), 200
+        }
 
+    except HTTPException:
+        raise
     except Exception as e:
         log.exception("Failed to trigger DAG")
-        return jsonify({"error": str(e)}), 500
+        raise HTTPException(status_code=500, detail=str(e))
 
-@dagen_rest_bp.route("/dags/schedule/update", methods=["PATCH"])
-@csrf.exempt
-@require_api_key
-def update_dag_schedule():
-    """
-    Update the schedule interval of a DAG by creating a new DAG version.
 
-    Expects a JSON payload:
-        - dag_id (str): Required. ID of the DAG to update.
-        - schedule_interval (str): Required. New cron expression (validated using croniter).
-
-    Returns:
-        Response 200: DAG schedule updated, returns the new version number.
-        Response 400: Missing or invalid parameters (e.g., invalid cron).
-        Response 404: DAG or DAG version not found.
-        Response 500: Internal error while updating the schedule.
-    """
+@dagen_fastapi_app.patch("/dags/schedule/update")
+def update_dag_schedule(req: UpdateScheduleRequest, x_api_key: str = Header(None)):
+    verify_api_key(x_api_key)
     try:
-        data = request.get_json(force=True)
-        dag_id = data.get("dag_id")
-        new_schedule = data.get("schedule_interval")
-
-        if not dag_id or not new_schedule:
-            return jsonify({"error": "Missing 'dag_id' or 'schedule_interval'"}), 400
-
-        if not croniter.is_valid(new_schedule):
-            return jsonify({"error": "Invalid 'schedule_interval'. Must be a valid cron expression."}), 400
+        if not croniter.is_valid(req.schedule_interval):
+            raise HTTPException(status_code=400, detail="Invalid 'schedule_interval'. Must be a valid cron expression.")
 
         with create_session() as session:
-            dag_obj = session.query(DagenDag).filter(DagenDag.dag_id == dag_id).first()
+            dag_obj = session.query(DagenDag).filter(DagenDag.dag_id == req.dag_id).first()
             if not dag_obj:
-                return jsonify({"error": f"DAG '{dag_id}' not found"}), 404
+                raise HTTPException(status_code=404, detail=f"DAG '{req.dag_id}' not found")
 
             latest_version = (
                 session.query(DagenDagVersion)
-                .filter(DagenDagVersion.dag_id == dag_id)
+                .filter(DagenDagVersion.dag_id == req.dag_id)
                 .order_by(DagenDagVersion.version.desc())
                 .first()
             )
             if not latest_version:
-                return jsonify({"error": f"No version found for DAG '{dag_id}'"}), 404
+                raise HTTPException(status_code=404, detail=f"No version found for DAG '{req.dag_id}'")
 
-            # Create a new version by copying values
             new_version_number = latest_version.version + 1
             new_version = DagenDagVersion(
-                dag_id=dag_id,
-                schedule_interval=new_schedule,
+                dag_id=req.dag_id,
+                schedule_interval=req.schedule_interval,
                 creator=EXTERNAL_SCHEDULER_USER_ID
             )
             new_version.set_options(latest_version.dag_options)
@@ -204,73 +132,41 @@ def update_dag_schedule():
             new_version.approver_id = EXTERNAL_SCHEDULER_USER_ID
             new_version.approved_at = datetime.now(timezone.utc)
 
-
             session.add(new_version)
-
             dag_obj._live_version = new_version_number
             dag_obj.updated_at = datetime.now(timezone.utc)
-
             session.commit()
 
-        refresh_dagbag(dag_id=dag_id)
-        return jsonify({
-            "message": f"Schedule for DAG '{dag_id}' updated to '{new_schedule}', version {new_version_number}"
-        }), 200
+        refresh_dagbag(dag_id=req.dag_id)
+        return {
+            "message": f"Schedule for DAG '{req.dag_id}' updated to '{req.schedule_interval}', version {new_version_number}"
+        }
 
+    except HTTPException:
+        raise
     except Exception as e:
         log.exception("Failed to update DAG schedule")
-        return jsonify({"error": str(e)}), 500
+        raise HTTPException(status_code=500, detail=str(e))
 
-@csrf.exempt
-@dagen_rest_bp.route("/dags/schedule/revert/latest", methods=["POST"])
-@require_api_key
-def revert_latest_external_schedule_override():
-    """
-    Revert the most recent DAG version created by the external scheduler.
 
-    Expects a JSON payload:
-        - dag_id (str): Required. ID of the DAG to revert.
+@dagen_fastapi_app.post("/dags/schedule/revert/latest")
+def revert_latest_external_schedule_override(req: RevertRequest, x_api_key: str = Header(None)):
+    verify_api_key(x_api_key)
+    return _revert_dag_schedule_override(req.dag_id, delete_all=False)
 
-    Returns:
-        Response 200: DAG reverted to previous version, lists deleted version.
-        Response 400: No suitable previous version found.
-        Response 404: DAG or versions not found.
-        Response 500: Internal error during revert.
-    """
-    return _revert_dag_schedule_override(delete_all=False)
 
-@csrf.exempt
-@dagen_rest_bp.route("/dags/schedule/revert/all", methods=["POST"])
-@require_api_key
-def revert_all_external_schedule_overrides():
-    """
-    Revert top DAG versions created by the external scheduler for a given DAG.
-    This reverts all the latest DAG versions created by the external scheduler
-    until a version created by a non-external user is encountered.
+@dagen_fastapi_app.post("/dags/schedule/revert/all")
+def revert_all_external_schedule_overrides(req: RevertRequest, x_api_key: str = Header(None)):
+    verify_api_key(x_api_key)
+    return _revert_dag_schedule_override(req.dag_id, delete_all=True)
 
-    Expects a JSON payload:
-        - dag_id (str): Required. ID of the DAG to revert.
 
-    Returns:
-        Response 200: DAG reverted to latest non-external version, lists all deleted versions.
-        Response 400: No non-external versions available to revert to.
-        Response 404: DAG or versions not found.
-        Response 500: Internal error during revert.
-    """
-    return _revert_dag_schedule_override(delete_all=True)
-
-def _revert_dag_schedule_override(delete_all: bool):
+def _revert_dag_schedule_override(dag_id: str, delete_all: bool):
     try:
-        data = request.get_json(force=True)
-        dag_id = data.get("dag_id")
-
-        if not dag_id:
-            return jsonify({"error": "Missing 'dag_id' in request body"}), 400
-
         with create_session() as session:
             dag_obj = session.query(DagenDag).filter(DagenDag.dag_id == dag_id).first()
             if not dag_obj:
-                return jsonify({"error": f"DAG '{dag_id}' not found"}), 404
+                raise HTTPException(status_code=404, detail=f"DAG '{dag_id}' not found")
 
             versions = (
                 session.query(DagenDagVersion)
@@ -280,7 +176,7 @@ def _revert_dag_schedule_override(delete_all: bool):
             )
 
             if not versions:
-                return jsonify({"error": f"No versions found for DAG '{dag_id}'"}), 404
+                raise HTTPException(status_code=404, detail=f"No versions found for DAG '{dag_id}'")
 
             new_live_version = None
             deleted_versions = []
@@ -298,9 +194,10 @@ def _revert_dag_schedule_override(delete_all: bool):
                     break
 
             if new_live_version is None or new_live_version < 1:
-                return jsonify({
-                    "error": f"No non-external versions found for DAG '{dag_id}'. Nothing to revert to."
-                }), 400
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"No non-external versions found for DAG '{dag_id}'. Nothing to revert to."
+                )
 
             dag_obj._live_version = new_live_version
             dag_obj.updated_at = datetime.now(timezone.utc)
@@ -308,11 +205,13 @@ def _revert_dag_schedule_override(delete_all: bool):
 
         refresh_dagbag(dag_id=dag_id)
 
-        return jsonify({
+        return {
             "message": f"Reverted DAG '{dag_id}' to version {new_live_version}",
             "deleted_versions": deleted_versions
-        }), 200
+        }
 
+    except HTTPException:
+        raise
     except Exception as e:
         log.exception("Failed to revert DAG schedule override")
-        return jsonify({"error": str(e)}), 500
+        raise HTTPException(status_code=500, detail=str(e))

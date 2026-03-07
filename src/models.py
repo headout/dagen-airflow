@@ -1,17 +1,17 @@
 import logging
 from functools import cached_property
 
-from airflow.models.base import ID_LEN
-from airflow.utils import timezone
-from airflow.utils.dates import cron_presets
-from airflow.utils.db import provide_session
+from airflow.sdk import timezone
+from airflow.utils.session import provide_session
 from airflow.utils.sqlalchemy import UtcDateTime
 from croniter import croniter
 from dagen.serialization import dumps, loads
 from flask_appbuilder.security.sqla.models import User
 from sqlalchemy import Column, ForeignKey, Integer, String, Text, event
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import joinedload, relationship, sessionmaker
+from sqlalchemy.orm import declarative_base, joinedload, relationship, sessionmaker
+
+# ID_LEN was removed from airflow.models.base in newer versions
+ID_LEN = 250
 
 Base = declarative_base()
 

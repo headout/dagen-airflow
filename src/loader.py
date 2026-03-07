@@ -1,4 +1,4 @@
-import imp
+import importlib.util
 import os
 import sys
 from datetime import datetime
@@ -6,18 +6,9 @@ from functools import partial
 
 import sqlalchemy
 from airflow.configuration import conf
-
-try:
-    # Airflow v2.0
-    from airflow.utils.file import list_py_file_paths
-    list_py_file_paths = partial(
-        list_py_file_paths, include_smart_sensor=False)
-except ImportError:
-    from airflow.utils.dag_processing import list_py_file_paths
-
-from airflow.utils.db import provide_session
+from airflow.utils.file import list_py_file_paths
+from airflow.utils.session import provide_session
 from airflow.utils.log.logging_mixin import LoggingMixin
-from airflow.utils.timeout import timeout
 from dagen.config import config
 from dagen.dag_templates import BaseDagTemplate
 from dagen.exceptions import TemplateNotFoundError
@@ -28,7 +19,6 @@ from sqlalchemy.orm import joinedload
 
 list_py_file_paths = partial(
     list_py_file_paths,
-    include_examples=False,
     safe_mode=False
 )
 
@@ -67,14 +57,15 @@ class TemplateLoader(LoggingMixin):
         self.log.debug(f'Importing {filepath}')
         modname, _ = os.path.splitext(os.path.split(filepath)[-1])
         mods = []
-        with timeout(self.TEMPLATE_IMPORT_TIMEOUT):
-            try:
-                m = imp.load_source(modname, filepath)
-                mods.append(m)
-            except Exception as e:
-                self.log.exception(f'Failed to import: {filepath}')
-                self.import_errors[filepath] = str(e)
-                self.file_last_changed[filepath] = file_last_changed_on_disk
+        try:
+            spec = importlib.util.spec_from_file_location(modname, filepath)
+            m = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(m)
+            mods.append(m)
+        except Exception as e:
+            self.log.exception(f'Failed to import: {filepath}')
+            self.import_errors[filepath] = str(e)
+            self.file_last_changed[filepath] = file_last_changed_on_disk
         for mod in mods:
             for val in list(m.__dict__.values()):
                 if isinstance(val, type) and val != BaseDagTemplate and issubclass(val, BaseDagTemplate):

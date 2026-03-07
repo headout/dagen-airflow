@@ -1,15 +1,11 @@
 import asyncio
 from functools import wraps
 
-import airflow
-
-
 def login_required(func):
-    # when airflow loads plugins, login is still None.
+    # In Airflow 2.x+, authentication is handled by FAB/security manager.
+    # This decorator is a no-op passthrough; actual auth is via @has_access.
     @wraps(func)
     def func_wrapper(*args, **kwargs):
-        if airflow.login:
-            return airflow.login.login_required(func)(*args, **kwargs)
         return func(*args, **kwargs)
     return func_wrapper
 

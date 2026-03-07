@@ -54,7 +54,7 @@ def run_migrations_offline():
     script output.
 
     """
-    url = config.get_main_option("sqlalchemy.url")
+    url = os.getenv('AIRFLOW__CORE__SQL_ALCHEMY_CONN', config.get_main_option("sqlalchemy.url"))
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -75,8 +75,12 @@ def run_migrations_online():
     and associate a connection with the context.
 
     """
+    cfg = config.get_section(config.config_ini_section)
+    db_url = os.getenv('AIRFLOW__CORE__SQL_ALCHEMY_CONN')
+    if db_url:
+        cfg['sqlalchemy.url'] = db_url
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section),
+        cfg,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )

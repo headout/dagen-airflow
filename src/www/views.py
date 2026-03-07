@@ -2,8 +2,9 @@ import logging
 from functools import wraps
 
 import airflow
-from airflow.api.common.experimental import delete_dag
-from airflow.exceptions import DagFileExists, DagNotFound
+# airflow.api.common.delete_dag removed in Airflow 3.x
+# Use DagModel.deactivate_deleted_dags or REST API instead
+from airflow.exceptions import DagNotFound
 from airflow.utils.log.logging_mixin import LoggingMixin
 from flask import current_app, flash, g, redirect, request, url_for
 from flask_appbuilder import BaseView as AppBuilderBaseView
@@ -138,17 +139,11 @@ class DagenFABView(AppBuilderBaseView, LoggingMixin):
     @has_access
     def delete(self, session=None):
         dag_id = request.args.get('dag_id')
-        DagenDagQueryset().delete_dag(dag_id).done()
-        refresh_dagen_templates()
         try:
-            delete_dag.delete_dag(dag_id)
-        except DagNotFound:
-            flash("DAG with id {} not found. Cannot delete".format(dag_id), 'error')
-            return self._redirect_home()
-        except DagFileExists:
-            flash("Dag id {} is still in DagBag. "
-                  "Remove the DAG file first.".format(dag_id),
-                  'error')
+            DagenDagQueryset().delete_dag(dag_id).done()
+            refresh_dagen_templates()
+        except Exception:
+            flash("DAG with id {} could not be deleted.".format(dag_id), 'error')
             return self._redirect_home()
 
         flash("Deleting DAG with id {}. May take a couple minutes to fully"
