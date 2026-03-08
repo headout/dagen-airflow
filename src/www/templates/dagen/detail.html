@@ -1,33 +1,94 @@
-{% extends base_template %}
-{% block page_title %}
-    Dagen Details -
-    {{ dag_id }}
-{% endblock %}
-{% block head_css %}
-    {{ super() }}
-    <link rel="stylesheet" href="{{ url_for('dagen_bp.static', filename='dagen/css/style.css') }}"/>
-{% endblock %}
+{% extends "dagen/base.html" %}
+{% block page_title %}Dagen Details - {{ dag_id }}{% endblock %}
 {% block content %}
-    <h2>
-        Dagen Details -
-        {{ dag_id }}
-    </h2>
+    <h2>Dagen Details - {{ dag_id }}</h2>
     <hr/>
 
     <div class="row">
         <div class="container col-md-10" id="main-container">
             <ul class="nav nav-tabs actions-nav">
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('DagenFABView.list') }}">List</a>
+                    <a class="nav-link" href="{{ base_url }}/">List</a>
                 </li>
                 <li class="nav-item active">
-                    <a class="nav-link" href="{{ url_for('DagenFABView.detail', dag_id=dag_id) }}" title="View Details">View</a>
+                    <a class="nav-link" href="{{ base_url }}/dags/detail?dag_id={{ dag_id }}" title="View Details">View</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('DagenFABView.edit', dag_id=dag_id) }}" title="Edit Details">Edit</a>
+                    <a class="nav-link" href="{{ base_url }}/dags/edit?dag_id={{ dag_id }}" title="Edit Details">Edit</a>
                 </li>
             </ul>
+
+            <div class="panel panel-default" style="margin-top:15px;">
+                <div class="panel-heading"><strong>DAG Info</strong></div>
+                <table class="table table-bordered">
+                    <tr><td><strong>DAG ID</strong></td><td>{{ dbDag.dag_id }}</td></tr>
+                    <tr><td><strong>Template ID</strong></td><td>{{ dbDag.template_id }}</td></tr>
+                    <tr><td><strong>Category</strong></td><td>{{ dbDag.category }}</td></tr>
+                    <tr>
+                        <td><strong>Status</strong></td>
+                        <td>
+                            {% if dbDag.is_enabled %}
+                                <span class="label label-success">Published & Approved</span>
+                            {% elif dbDag.is_published %}
+                                <span class="label label-warning">Pending Approval</span>
+                            {% else %}
+                                <span class="label label-danger">Disabled</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr><td><strong>Live Version</strong></td><td>{{ dbDag.version_str or 'None' }}</td></tr>
+                    <tr><td><strong>Created</strong></td><td>{{ dbDag.created_at }}</td></tr>
+                    <tr><td><strong>Updated</strong></td><td>{{ dbDag.updated_at }}</td></tr>
+                </table>
+            </div>
+
+            {% if versions %}
+            <div class="panel panel-default">
+                <div class="panel-heading"><strong>Version History</strong></div>
+                <table class="table table-striped table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Version</th>
+                            <th>Schedule</th>
+                            <th>Approved</th>
+                            <th>Creator</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for v in versions %}
+                        <tr {% if dbDag._live_version == v.version %}class="success"{% endif %}>
+                            <td>
+                                v{{ v.version }}
+                                {% if dbDag._live_version == v.version %}
+                                    <span class="label label-primary">LIVE</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ v.schedule_interval }}</td>
+                            <td>
+                                {% if v.is_approved %}
+                                    <span class="label label-success">Yes</span>
+                                {% else %}
+                                    <span class="label label-default">No</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ v.creator_str }}</td>
+                            <td>{{ v.created_at }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+
+            {% if dbDag.is_published and dbDag.live_options %}
+            <div class="panel panel-default">
+                <div class="panel-heading"><strong>Live Version Options</strong></div>
+                <div class="panel-body">
+                    <pre>{{ dbDag.live_options | tojson(indent=2) }}</pre>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
-
 {% endblock %}

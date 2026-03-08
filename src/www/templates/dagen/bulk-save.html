@@ -1,36 +1,51 @@
-{% extends base_template %}
-{% block page_title %}Create DAG
-{% endblock %}
-{% block head_css %}
-    {{ super() }}
-    <link rel="stylesheet" href="{{ url_for('dagen_bp.static', filename='dagen/css/style.css') }}"/>
-{% endblock %}
+{% extends "dagen/base.html" %}
+{% block page_title %}Bulk Sync DAGs{% endblock %}
 {% block content %}
-<h2>
-    Create DAG
-</h2>
+<h2>Bulk Sync DAGs</h2>
 <hr/>
 
 <div class="row">
     <div class="container col-md-10" id="main-container">
         <ul class="nav nav-tabs actions-nav">
             <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('DagenFABView.list') }}">List ({{ dbDags|length }})</a>
+                <a class="nav-link" href="{{ base_url }}/">List</a>
             </li>
-            {% if perm_can_create %}
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('DagenFABView.create') }}" title="Create New DAG">Create</a>
-                </li>
-            {% endif %}
+            <li class="nav-item">
+                <a class="nav-link" href="{{ base_url }}/dags/create" title="Create New DAG">Create</a>
+            </li>
             <li class="nav-item active">
-                <a class="nav-link" href="{{ url_for('DagenFABView.bulk_save') }}" title="Bulk Save DAGs">Bulk Sync</a>
+                <a class="nav-link" href="{{ base_url }}/dags/save" title="Bulk Save DAGs">Bulk Sync</a>
             </li>
         </ul>
 
         <div class="wrapper admin-form form-horizontal">
-            <form action="" class="admin-form form-horizontal" enctype="multipart/form-data" method="POST" role="form">
+            <form action="{{ base_url }}/dags/save" class="admin-form form-horizontal" enctype="multipart/form-data" method="POST" role="form">
                 <div class="panel panel-default form-container">
-                    {% include 'dagen/incl_form_fields.html' %}
+                    <div class="form-group">
+                        <div class="col-md-10 form-field">
+                            <label class="control-label" for="template_id">Template ID <strong style="color:red;">*</strong></label>
+                            <select class="form-control" id="template_id" name="template_id" required>
+                                <option disabled selected value="">Select a template</option>
+                                {% for t in templates_list %}
+                                    <option value="{{ t }}">{{ t }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-10 form-field">
+                            <label class="control-label" for="csv_data">CSV File <strong style="color:red;">*</strong></label>
+                            <input type="file" class="form-control" id="csv_data" name="csv_data" accept=".csv" required/>
+                            <i>Please pick a CSV file containing all the required DAGs (relevant to this template) to generate</i>
+                        </div>
+                    </div>
+                    <div class="form-check">
+                        <div class="col-md-10 form-field">
+                            <label class="form-check-label" for="mark_approved">Mark approved?</label>
+                            <input type="checkbox" class="form-check-input" id="mark_approved" name="mark_approved"/>
+                            <br/><i>Additionally mark all the new DAG versions as approved if checked.</i>
+                        </div>
+                    </div>
                 </div>
                 <div class="form-group action-btns">
                     <div class="col-md-offset-2 col-md-10 submit-row">
@@ -40,41 +55,40 @@
             </form>
         </div>
 
+        {% if res_success or res_failure %}
         <ul class="nav nav-pills" role="tablist">
             {% if res_success %}
                 <li class="nav-item active">
-                    <a aria-controls="result-success" aria-selected="true" class="nav-link active" data-toggle="pill" href="#result-success" id="result-success-tab" role="tab">
-                        {{ res_success|length }}
-                        success
+                    <a aria-controls="result-success" class="nav-link active" data-toggle="pill" href="#result-success" role="tab">
+                        {{ res_success|length }} success
                     </a>
                 </li>
             {% endif %}
             {% if res_failure %}
                 <li class="nav-item {% if not res_success %}active{% endif %}">
-                    <a aria-controls="result-failure" aria-selected="{{ not res_success }}" class="nav-link {% if not res_success %}active{% endif %}" data-toggle="pill" href="#result-failure" id="result-failure-tab" role="tab">
-                        {{ res_failure|length }}
-                        failure
+                    <a aria-controls="result-failure" class="nav-link {% if not res_success %}active{% endif %}" data-toggle="pill" href="#result-failure" role="tab">
+                        {{ res_failure|length }} failure
                     </a>
                 </li>
             {% endif %}
         </ul>
-        {% if res_success or res_failure %}
-            <div class="tab-content" id="result-tabContent">
-                {% if res_success %}
-                    <div aria-labelledby="result-success-tab" class="tab-pane active" id="result-success" role="tabpanel">
-                        {% with result=res_success %}
-                        {% include 'dagen/incl_result_table_bulk_save.html' %}
-                        {% endwith %}
-                    </div>
-                {% endif %}
-                {% if res_failure %}
-                    <div aria-labelledby="result-failure-tab" class="tab-pane {% if not res_success %}active{% endif %}" id="result-failure" role="tabpanel">
-                        {% with result=res_failure %}
-                        {% include 'dagen/incl_result_table_bulk_save.html' %}
-                        {% endwith %}
-                    </div>
-                {% endif %}
-            </div>
+        <div class="tab-content" id="result-tabContent">
+            {% if res_success %}
+                <div class="tab-pane active" id="result-success" role="tabpanel">
+                    {% with result=res_success %}
+                    {% include 'dagen/incl_result_table_bulk_save.html' %}
+                    {% endwith %}
+                </div>
+            {% endif %}
+            {% if res_failure %}
+                <div class="tab-pane {% if not res_success %}active{% endif %}" id="result-failure" role="tabpanel">
+                    {% with result=res_failure %}
+                    {% include 'dagen/incl_result_table_bulk_save.html' %}
+                    {% endwith %}
+                </div>
+            {% endif %}
+        </div>
         {% endif %}
     </div>
-</div>{% endblock %}
+</div>
+{% endblock %}

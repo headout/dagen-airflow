@@ -6,7 +6,7 @@ from wtforms.widgets import Select, TextInput, html_params
 
 
 class TextInputGroup(TextInput):
-    field_flags = ('hidden',)
+    field_flags = {"hidden": True}
 
     def __init__(self, prepend=None, *args, **kwargs):
         super().__init__(*args, **kwargs)

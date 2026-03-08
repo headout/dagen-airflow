@@ -1,36 +1,24 @@
-{% extends base_template %}
-{% block page_title %}Dagen-managed DAGS
-{% endblock
-%}
-{% block head_css %}
-    {{ super() }}
-    <link rel="stylesheet" href="{{ url_for('dagen_bp.static', filename='dagen/css/style.css') }}"/>
-{% endblock %}
+{% extends "dagen/base.html" %}
+{% block page_title %}Dagen-managed DAGs{% endblock %}
 {% block content %}
-    <h2>Dagen-managed DAGS</h2>
+    <h2>Dagen-managed DAGs</h2>
     <hr/>
 
     <ul class="nav nav-tabs actions-nav">
         <li class="nav-item active">
-            <a class="nav-link" href="{{ url_for('DagenFABView.list') }}">List ({{ dbDags|length }})</a>
+            <a class="nav-link" href="{{ base_url }}/">List ({{ dbDags|length }})</a>
         </li>
-        {% if perm_can_create %}
-            <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('DagenFABView.create') }}" title="Create New DAG">Create</a>
-            </li>
-        {% endif %}
-        {% if perm_can_bulk_save %}
-            <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('DagenFABView.bulk_save') }}" title="Bulk Save DAGs">Bulk Sync</a>
-            </li>
-        {% endif %}
-        {% if perm_can_approve %}
-            <span class="text-right">
-                <form class="form-actions ajax-form" method="POST" action="{{ url_for('DagenRestView.approve_all') }}">
-                    <input class="btn btn-warning submit" data-confirm-button="Yes, approve them all!" data-confirm-description="All the current Dagen DAGs version will be approved and immediately published live." data-confirm-level="warning" data-confirm-title="Are you sure?" role="button" type="submit" value="Approve all"/>
-                </form>
-            </span>
-        {% endif %}
+        <li class="nav-item">
+            <a class="nav-link" href="{{ base_url }}/dags/create" title="Create New DAG">Create</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{{ base_url }}/dags/save" title="Bulk Save DAGs">Bulk Sync</a>
+        </li>
+        <span class="text-right">
+            <form class="form-actions ajax-form" method="POST" action="{{ base_url }}/dags/approve/all">
+                <input class="btn btn-warning submit" data-confirm-button="Yes, approve them all!" data-confirm-description="All current Dagen DAG versions will be approved and immediately published live." data-confirm-level="warning" data-confirm-title="Are you sure?" role="button" type="submit" value="Approve all"/>
+            </form>
+        </span>
     </ul>
 
     <div class="clearfix"></div>
@@ -38,77 +26,67 @@
         <thead>
             <tr role="row">
                 <th width="12">
-                    <span class="glyphicon glyphicon-info-sign" data-original-title="Toggle live status of DAG" id="state_header" title=""></span>
+                    <span class="glyphicon glyphicon-info-sign" title="Toggle live status of DAG"></span>
                 </th>
-                <th class="column-header">Dag Representation</th>
+                <th class="column-header">DAG Representation</th>
                 <th class="column-header">Scheduled Interval</th>
                 <th class="column-header">Author</th>
                 <th class="col-md-1">Links</th>
             </tr>
         </thead>
-        {% for dbDag in dbDags %}
+        {% for dag in dbDags %}
             <tr>
                 <td>
-                    {% if dbDag.is_enabled %}
-                        <span class="label" data-original-title="Published" style="background-color: green" title="">{{ dbDag.version_str }}</span>
-                    {% elif dbDag.is_published %}
-                        <span class="label" data-original-title="Pending Approval" style="background-color: yellow; color: black" title="">{{ dbDag.version_str }}</span>
+                    {% if dag.is_enabled %}
+                        <span class="label" style="background-color: green" title="Published">{{ dag.version_str }}</span>
+                    {% elif dag.is_published %}
+                        <span class="label" style="background-color: yellow; color: black" title="Pending Approval">{{ dag.version_str }}</span>
                     {% else %}
-                        <span class="label" data-original-title="Disabled" style="background-color: red" title="">X</span>
+                        <span class="label" style="background-color: red" title="Disabled">X</span>
                     {% endif %}
                 </td>
                 <td>
-                    <span class="label label-default">{{ dbDag }}</span>
+                    <span class="label label-default">{{ dag.str }}</span>
                 </td>
                 <td>
                     <span class="label label-default">
-                        {% if dbDag.is_published %}
-                            {{ dbDag.live_version.schedule_interval }}
-                            {% else %}-
-                        {% endif %}
+                        {% if dag.is_published %}
+                            {{ dag.schedule_interval }}
+                        {% else %}-{% endif %}
                     </span>
                 </td>
                 <td>
                     <span class="label label-default">
-                        {% if dbDag.is_published %}
-                            {{ dbDag.live_version.creator_str }}
-                            {% else
-        %}-
-                        {% endif %}
+                        {% if dag.is_published %}
+                            {{ dag.creator_str }}
+                        {% else %}-{% endif %}
                     </span>
                 </td>
                 <td class="list-buttons-column">
-                    {% if perm_can_edit %}
-                        <a class="icon link-tooltip" href="{{ url_for('DagenFABView.edit', dag_id=dbDag.dag_id) }}" title="Edit">
-                            <span class="fa fa-pencil" data-original-title="" title=""></span>
+                    <a class="icon link-tooltip" href="{{ base_url }}/dags/edit?dag_id={{ dag.dag_id }}" title="Edit">
+                        <span class="fa fa-pencil"></span>
+                    </a>
+                    {% if dag.is_published %}
+                        <a class="icon link-tooltip" href="{{ base_url }}/dags/detail?dag_id={{ dag.dag_id }}" title="Details">
+                            <span class="fa fa-list"></span>
                         </a>
                     {% endif %}
-                    {% if dbDag.is_published and perm_can_detail %}
-                        <a class="icon link-tooltip" href="{{ url_for('DagenFABView.detail', dag_id=dbDag.dag_id) }}" title="Details">
-                            <span class="fa fa-list" data-original-title="" title=""></span>
+                    {% if dag.is_published and not dag.is_enabled %}
+                        <a class="icon link-tooltip" href="{{ base_url }}/dags/approve?dag_id={{ dag.dag_id }}" title="Approve">
+                            <span class="fa fa-plane"></span>
                         </a>
                     {% endif %}
-                    {% if dbDag.is_published and not dbDag.is_enabled and
-      perm_can_approve %}
-                        <a class="icon link-tooltip" href="{{ url_for('DagenFABView.approve', dag_id=dbDag.dag_id) }}" title="Approve">
-                            <span class="fa fa-plane" data-original-title="" title=""></span>
-                        </a>
-                    {% endif %}
-                    {% if perm_can_delete %}
-                        <a class="icon link-tooltip" href="{{ url_for('DagenFABView.delete', dag_id=dbDag.dag_id) }}">
-                            <span class="glyphicon glyphicon-remove-circle" data-original-title="Delete" style="color: red"></span>
-                        </a>
-                    {% endif %}
+                    <a class="icon link-tooltip" href="{{ base_url }}/dags/delete?dag_id={{ dag.dag_id }}" onclick="return confirm('Delete DAG {{ dag.dag_id }}?');">
+                        <span class="glyphicon glyphicon-remove-circle" style="color: red" title="Delete"></span>
+                    </a>
                 </td>
             </tr>
         {% endfor %}
     </table>
 {% endblock %}
-{% block tail %}
-    {{ super() }}
-    {% block tail_extra_js %}
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
-        <script>
+{% block tail_js %}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@9"></script>
+    <script>
   Swal = Swal.mixin({
     customClass: {
       confirmButton: "btn btn-success",
@@ -117,6 +95,5 @@
     buttonsStyling: false,
   });
 </script>
-        <script src="{{ url_for('dagen_bp.static', filename='dagen/js/ajax-form.js') }}"></script>
-    {% endblock %}
+    <script src="{{ base_url }}/static/dagen/js/ajax-form.js"></script>
 {% endblock %}

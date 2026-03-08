@@ -1,32 +1,23 @@
-{% extends base_template %}
-{% block page_title %}Create DAG
-{% endblock %}
-{% block head_css %}
-    {{ super() }}
-    <link rel="stylesheet" href="{{ url_for('dagen_bp.static', filename='dagen/css/style.css') }}"/>
-{% endblock %}
+{% extends "dagen/base.html" %}
+{% block page_title %}Create DAG{% endblock %}
 {% block content %}
     {% include 'dagen/incl_modal_jsonform.html' %}
 
-    <h2>
-        Create DAG
-    </h2>
+    <h2>Create DAG</h2>
     <hr/>
 
     <div class="row">
         <div class="container col-md-10" id="main-container">
             <ul class="nav nav-tabs actions-nav">
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('DagenFABView.list') }}">List ({{ dbDags|length }})</a>
+                    <a class="nav-link" href="{{ base_url }}/">List</a>
                 </li>
                 <li class="nav-item active">
-                    <a class="nav-link" href="{{ url_for('DagenFABView.create') }}" title="Create New DAG">Create</a>
+                    <a class="nav-link" href="{{ base_url }}/dags/create" title="Create New DAG">Create</a>
                 </li>
-                {% if perm_can_bulk_save %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('DagenFABView.bulk_save') }}" title="Bulk Save DAGs">Bulk Sync</a>
-                    </li>
-                {% endif %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ base_url }}/dags/save" title="Bulk Save DAGs">Bulk Sync</a>
+                </li>
             </ul>
 
             <div class="wrapper admin-form form-horizontal">
@@ -46,11 +37,8 @@
                 </div>
                 {% endif %}
                 {% for tmplId, form in forms.items() %}
-                    <form action="" class="admin-form form-horizontal tmpl-form" enctype="multipart/form-data" id="tmplForm_{{ tmplId }}" method="POST" role="form">
+                    <form action="{{ base_url }}/dags/create" class="admin-form form-horizontal tmpl-form" enctype="multipart/form-data" id="tmplForm_{{ tmplId }}" method="POST" role="form">
                         <input type="hidden" name="template_id" value="{{ tmplId }}"/>
-                        {% if csrf_token %}
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                        {% endif %}
                         {% include 'dagen/incl_template_form.html' %}
                     </form>
                 {% endfor %}
@@ -58,14 +46,12 @@
         </div>
     </div>
 {% endblock %}
-{% block tail %}
-{{ super() }}
-{% block tail_extra_js %}
+{% block tail_js %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.11.0/underscore-min.js"
     integrity="sha512-wBiNJt1JXeA/ra9F8K2jyO4Bnxr0dRPsy7JaMqSlxqTjUGHe1Z+Fm5HMjCWqkIYvp/oCbdJEivZ5pLvAtK0csQ=="
     crossorigin="anonymous"></script>
 
-<script src="{{ url_for('dagen_bp.static', filename='dagen/js/jsonform.js') }}"></script>
+<script src="{{ base_url }}/static/dagen/js/jsonform.js"></script>
 <script>
     function resetForms() {
         $(".tmpl-form").hide();
@@ -84,6 +70,5 @@
         });
     });
 </script>
-<script src="{{ url_for('dagen_bp.static', filename='dagen/js/dep-form-value.js') }}"></script>
-{% endblock %}
+<script src="{{ base_url }}/static/dagen/js/dep-form-value.js"></script>
 {% endblock %}

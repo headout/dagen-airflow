@@ -1,40 +1,27 @@
-{% extends base_template %}
-{% block page_title %}
-    Edit DAG -
-    {{ dag_id }}
-{% endblock %}
-{% block head_css %}
-    {{ super() }}
-    <link rel="stylesheet" href="{{ url_for('dagen_bp.static', filename='dagen/css/style.css') }}"/>
-{% endblock %}
+{% extends "dagen/base.html" %}
+{% block page_title %}Edit DAG - {{ dag_id }}{% endblock %}
 {% block content %}
     {% include 'dagen/incl_modal_jsonform.html' %}
 
-    <h2>
-        Edit DAG -
-        {{ dag_id }}
-    </h2>
+    <h2>Edit DAG - {{ dag_id }}</h2>
     <hr/>
 
     <div class="row">
         <div class="container col-md-10" id="main-container">
             <ul class="nav nav-tabs actions-nav">
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('DagenFABView.list') }}">List</a>
+                    <a class="nav-link" href="{{ base_url }}/">List</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('DagenFABView.detail', dag_id=dag_id) }}" title="View Details">View</a>
+                    <a class="nav-link" href="{{ base_url }}/dags/detail?dag_id={{ dag_id }}" title="View Details">View</a>
                 </li>
                 <li class="nav-item active">
-                    <a class="nav-link" href="{{ url_for('DagenFABView.edit', dag_id=dag_id) }}" title="Edit Details">Edit</a>
+                    <a class="nav-link" href="{{ base_url }}/dags/edit?dag_id={{ dag_id }}" title="Edit Details">Edit</a>
                 </li>
             </ul>
 
             <div class="admin-form form-horizontal">
-                <form action="" class="admin-form form-horizontal" enctype="multipart/form-data" method="POST" role="form">
-                    {% if csrf_token %}
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                    {% endif %}
+                <form action="{{ base_url }}/dags/edit?dag_id={{ dag_id }}" class="admin-form form-horizontal" enctype="multipart/form-data" method="POST" role="form">
                     <div class="form-group">
                         <label class="col-md-2 control-label" for="template_id">
                             Template ID &nbsp;<strong style="color: red;">*</strong>
@@ -62,18 +49,15 @@
         </div>
     </div>
 {% endblock %}
-{% block tail %}
-    {{ super() }}
-    {% block tail_extra_js %}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.11.0/underscore-min.js"
-        integrity="sha512-wBiNJt1JXeA/ra9F8K2jyO4Bnxr0dRPsy7JaMqSlxqTjUGHe1Z+Fm5HMjCWqkIYvp/oCbdJEivZ5pLvAtK0csQ=="
-        crossorigin="anonymous"></script>
+{% block tail_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.11.0/underscore-min.js"
+    integrity="sha512-wBiNJt1JXeA/ra9F8K2jyO4Bnxr0dRPsy7JaMqSlxqTjUGHe1Z+Fm5HMjCWqkIYvp/oCbdJEivZ5pLvAtK0csQ=="
+    crossorigin="anonymous"></script>
 
-        <script type="text/javascript">
-            window.dagVersions = {{ dagVersions | tojson }}
-        </script>
-        <script src="{{ url_for('dagen_bp.static', filename='dagen/js/jsonform.js') }}"></script>
-        <script src="{{ url_for('dagen_bp.static', filename='dagen/js/edit.js') }}"></script>
-        <script src="{{ url_for('dagen_bp.static', filename='dagen/js/dep-form-value.js') }}"></script>
-    {% endblock %}
+    <script type="text/javascript">
+        window.dagVersions = {{ dagVersions | tojson }}
+    </script>
+    <script src="{{ base_url }}/static/dagen/js/jsonform.js"></script>
+    <script src="{{ base_url }}/static/dagen/js/edit.js"></script>
+    <script src="{{ base_url }}/static/dagen/js/dep-form-value.js"></script>
 {% endblock %}
