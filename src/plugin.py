@@ -23,6 +23,16 @@ class DagenPlugin(AirflowPlugin, LoggingMixin):
             "url_prefix": "/dagen/ui",
         },
     ]
+    # Airflow 3.x: external_views adds links to the React UI navbar/sidebar
+    external_views = [
+        {
+            "name": "Dagen",
+            "href": "/dagen/ui/",
+            "url_route": "dagen",
+            "destination": "nav",
+            "category": "browse",
+        },
+    ]
 
     log = logging.root.getChild(f'{__name__}.{"DagenPlugin"}')
 
