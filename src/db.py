@@ -23,6 +23,13 @@ def _get_engine():
     if _engine is None:
         from airflow.configuration import conf
         sql_alchemy_conn = conf.get("database", "SQL_ALCHEMY_CONN")
+        # URL-encode special characters in password (e.g. $ signs)
+        from urllib.parse import quote
+        parts = sql_alchemy_conn.split("@", 1)
+        if "@" in sql_alchemy_conn and ":" in parts[0]:
+            scheme_user, password = parts[0].rsplit(":", 1)
+            password = quote(password, safe="")
+            sql_alchemy_conn = f"{scheme_user}:{password}@{parts[1]}"
         _engine = create_engine(sql_alchemy_conn, pool_pre_ping=True)
     return _engine
 
