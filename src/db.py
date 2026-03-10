@@ -7,6 +7,7 @@ string, bypassing Airflow's restriction for custom tables (ergo_task, ergo_job).
 """
 import functools
 import logging
+import os
 from contextlib import contextmanager
 
 from sqlalchemy import create_engine
@@ -21,22 +22,16 @@ _SessionFactory = None
 def _get_engine():
     global _engine
     if _engine is None:
-        from airflow.configuration import conf
-        sql_alchemy_conn = conf.get("database", "SQL_ALCHEMY_CONN")
-        try:
-            _engine = create_engine(sql_alchemy_conn, pool_pre_ping=True)
-        except Exception:
-            # URL may have special chars (e.g. $ in password) that break parsing.
-            # Use make_url to construct a properly-encoded URL.
-            from sqlalchemy.engine.url import make_url, URL
-            from urllib.parse import quote
-            parts = sql_alchemy_conn.split("@", 1)
-            scheme_user, password = parts[0].rsplit(":", 1)
-            scheme, user = scheme_user.split("://", 1)
-            host_db = parts[1]
-            password = quote(password, safe="")
-            encoded_url = f"{scheme}://{user}:{password}@{host_db}"
-            _engine = create_engine(encoded_url, pool_pre_ping=True)
+        # Read directly from env vars — more reliable in Airflow 3.x task
+        # subprocesses where conf.get may not reflect env overrides.
+        sql_alchemy_conn = (
+            os.environ.get("AIRFLOW__DATABASE__SQL_ALCHEMY_CONN")
+            or os.environ.get("AIRFLOW__CORE__SQL_ALCHEMY_CONN")
+        )
+        if not sql_alchemy_conn:
+            from airflow.configuration import conf
+            sql_alchemy_conn = conf.get("database", "SQL_ALCHEMY_CONN")
+        _engine = create_engine(sql_alchemy_conn, pool_pre_ping=True)
     return _engine
 
 
