@@ -1,4 +1,4 @@
-from airflow.utils.db import provide_session
+from dagen.db import provide_session
 from sqlalchemy.orm import joinedload
 
 from dagen.models import DagenDag, DagenDagVersion
@@ -14,7 +14,8 @@ class BaseQueryset(object):
         # To ensure that session is properly closed when the
         # queryset object is garbage collected.
         # Keeping unusable opened sessions would eat up mysql connections
-        self.session.close()
+        if hasattr(self, 'session') and self.session is not None:
+            self.session.close()
 
     def done(self):
         try:

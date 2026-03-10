@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from airflow.configuration import conf
-from airflow.utils.session import create_session
+from dagen.db import create_session
 from airflow.models.dagrun import DagRun
 from airflow.utils.types import DagRunType
 from croniter import croniter

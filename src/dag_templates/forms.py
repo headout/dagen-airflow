@@ -1,7 +1,7 @@
 import logging
 from collections import OrderedDict
 
-from airflow.utils.db import provide_session
+from dagen.db import provide_session
 from airflow.utils.log.logging_mixin import LoggingMixin
 from dagen.dag_templates.fields import (field_category, field_dag_id,
                                         field_pool, field_schedule_interval,

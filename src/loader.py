@@ -7,7 +7,7 @@ from functools import partial
 import sqlalchemy
 from airflow.configuration import conf
 from airflow.utils.file import list_py_file_paths
-from airflow.utils.session import provide_session
+from dagen.db import provide_session
 from airflow.utils.log.logging_mixin import LoggingMixin
 from dagen.config import config
 from dagen.dag_templates import BaseDagTemplate

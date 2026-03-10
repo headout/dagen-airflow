@@ -16,7 +16,7 @@ from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
 from airflow.configuration import conf
-from airflow.utils.session import create_session
+from dagen.db import create_session
 
 from dagen.exceptions import TemplateNotFoundError
 from dagen.internal import refresh_dagbag

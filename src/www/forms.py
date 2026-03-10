@@ -3,7 +3,7 @@ import csv
 import json
 from io import StringIO
 
-from airflow.utils.session import provide_session
+from dagen.db import provide_session
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, file_allowed, file_required
 from wtforms import validators

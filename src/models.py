@@ -2,7 +2,7 @@ import logging
 from functools import cached_property
 
 from airflow.sdk import timezone
-from airflow.utils.session import provide_session
+from dagen.db import provide_session
 from airflow.utils.sqlalchemy import UtcDateTime
 from croniter import croniter
 from dagen.serialization import dumps, loads
