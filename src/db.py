@@ -23,14 +23,20 @@ def _get_engine():
     if _engine is None:
         from airflow.configuration import conf
         sql_alchemy_conn = conf.get("database", "SQL_ALCHEMY_CONN")
-        # URL-encode special characters in password (e.g. $ signs)
-        from urllib.parse import quote
-        parts = sql_alchemy_conn.split("@", 1)
-        if "@" in sql_alchemy_conn and ":" in parts[0]:
+        try:
+            _engine = create_engine(sql_alchemy_conn, pool_pre_ping=True)
+        except Exception:
+            # URL may have special chars (e.g. $ in password) that break parsing.
+            # Use make_url to construct a properly-encoded URL.
+            from sqlalchemy.engine.url import make_url, URL
+            from urllib.parse import quote
+            parts = sql_alchemy_conn.split("@", 1)
             scheme_user, password = parts[0].rsplit(":", 1)
+            scheme, user = scheme_user.split("://", 1)
+            host_db = parts[1]
             password = quote(password, safe="")
-            sql_alchemy_conn = f"{scheme_user}:{password}@{parts[1]}"
-        _engine = create_engine(sql_alchemy_conn, pool_pre_ping=True)
+            encoded_url = f"{scheme}://{user}:{password}@{host_db}"
+            _engine = create_engine(encoded_url, pool_pre_ping=True)
     return _engine
 
 
