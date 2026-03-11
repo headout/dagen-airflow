@@ -2,8 +2,9 @@
 Direct database access for Airflow 3.x task subprocesses.
 
 Airflow 3.x blocks direct ORM access via Session() in task subprocesses.
-This module provides a direct SQLAlchemy session using the same DB connection
-string, bypassing Airflow's restriction for custom tables (ergo_task, ergo_job).
+block_orm_access() overwrites env vars and conf with "airflow-db-not-allowed:///".
+We capture the real DB URL at import time (before block_orm_access runs) so our
+custom tables (dagen_dag, ergo_task, ergo_job) can still be accessed.
 """
 import functools
 import logging
@@ -15,6 +16,12 @@ from sqlalchemy.orm import sessionmaker
 
 logger = logging.getLogger(__name__)
 
+# Capture at import time — before Airflow's block_orm_access() overwrites them.
+_DB_URL = (
+    os.environ.get("AIRFLOW__DATABASE__SQL_ALCHEMY_CONN")
+    or os.environ.get("AIRFLOW__CORE__SQL_ALCHEMY_CONN")
+)
+
 _engine = None
 _SessionFactory = None
 
@@ -22,12 +29,7 @@ _SessionFactory = None
 def _get_engine():
     global _engine
     if _engine is None:
-        # Read directly from env vars — more reliable in Airflow 3.x task
-        # subprocesses where conf.get may not reflect env overrides.
-        sql_alchemy_conn = (
-            os.environ.get("AIRFLOW__DATABASE__SQL_ALCHEMY_CONN")
-            or os.environ.get("AIRFLOW__CORE__SQL_ALCHEMY_CONN")
-        )
+        sql_alchemy_conn = _DB_URL
         if not sql_alchemy_conn:
             from airflow.configuration import conf
             sql_alchemy_conn = conf.get("database", "SQL_ALCHEMY_CONN")
