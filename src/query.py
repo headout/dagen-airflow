@@ -38,7 +38,7 @@ class DagenDagQueryset(BaseQueryset):
     def get_all(self, eager_load_versions=False, published=None):
         query = self.session.query(DagenDag)
         if eager_load_versions:
-            query = query.options(joinedload('versions'))
+            query = query.options(joinedload(DagenDag.versions))
         dags = query.all()
         if published is not None:
             dags = list(filter(lambda dag: published == dag.is_enabled, dags))
