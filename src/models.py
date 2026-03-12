@@ -6,7 +6,6 @@ from dagen.db import provide_session
 from airflow.utils.sqlalchemy import UtcDateTime
 from croniter import croniter
 from dagen.serialization import dumps, loads
-from flask_appbuilder.security.sqla.models import User
 from sqlalchemy import Column, ForeignKey, Integer, String, Text, event
 from sqlalchemy.orm import declarative_base, joinedload, relationship, sessionmaker
 
@@ -43,7 +42,8 @@ class DagenDag(Base):
         primaryjoin='and_(DagenDagVersion.dag_id == DagenDag.dag_id, '
                     'DagenDagVersion.version == DagenDag._live_version)',
         lazy='immediate',
-        uselist=False
+        uselist=False,
+        overlaps="versions,dag"
     )
 
     def __str__(self):
@@ -115,15 +115,13 @@ class DagenDagVersion(Base):
     )
     _schedule_interval = Column(
         'schedule_interval', String(50), nullable=False)
-    # Foreign keys to FAB's ab_user model
-    creator_id = Column('creator', ForeignKey(User.id, ondelete='SET NULL'))
-    approver_id = Column('approver', ForeignKey(User.id, ondelete='SET NULL'))
+    # FK to ab_user removed from ORM model — the constraint exists in the
+    # DB schema but our standalone engine doesn't know FAB's tables.
+    creator_id = Column('creator', Integer)
+    approver_id = Column('approver', Integer)
     approved_at = Column(UtcDateTime, index=True)
 
-    dag = relationship('DagenDag', back_populates='versions')
-    creator = relationship(User, foreign_keys=(creator_id,), lazy='immediate')
-    approver = relationship(User, foreign_keys=(
-        approver_id,), lazy='immediate')
+    dag = relationship('DagenDag', back_populates='versions', overlaps="live_version")
 
     def __str__(self):
         return f'{self.dag_id} - v{self.version}'
@@ -147,11 +145,11 @@ class DagenDagVersion(Base):
 
     @cached_property
     def creator_str(self):
-        return str(self.creator)
+        return str(self.creator_id) if self.creator_id else None
 
     @cached_property
     def approver_str(self):
-        return str(self.approver)
+        return str(self.approver_id) if self.approver_id else None
 
     @cached_property
     def dag_options(self):

@@ -108,7 +108,7 @@ async def list_dags(request: Request):
                 schedule = None
                 if lv:
                     try:
-                        creator = str(lv.creator) if lv.creator_id else str(lv.creator_id)
+                        creator = str(lv.creator_id)
                     except Exception:
                         creator = str(lv.creator_id)
                     schedule = lv._schedule_interval
@@ -356,7 +356,7 @@ async def detail(request: Request, dag_id: str = Query(...)):
         versions_list = []
         for v in sorted(db_dag.versions, key=lambda v: v.version, reverse=True):
             try:
-                c_str = str(v.creator) if v.creator_id else str(v.creator_id)
+                c_str = str(v.creator_id)
             except Exception:
                 c_str = str(v.creator_id)
             versions_list.append({
