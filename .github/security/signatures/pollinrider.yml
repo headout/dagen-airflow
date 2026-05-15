@@ -1,0 +1,84 @@
+id: pollinrider
+name: PolinRider RAT
+severity: HIGH
+enabled: true
+description: |
+  Detects indicators of the PolinRider supply-chain attack, which embeds a
+  Remote Access Trojan (RAT) payload inside JavaScript build-config files and
+  web font binaries. The attack targets frontend JavaScript projects by
+  compromising developer accounts and injecting obfuscated code into config
+  files that execute at install/build time.
+
+file_targets:
+  - type: text
+    glob:
+      - "eslint.config.js"
+      - "eslint.config.mjs"
+      - "eslint.config.cjs"
+      - "next.config.js"
+      - "next.config.mjs"
+      - "next.config.ts"
+      - "postcss.config.js"
+      - "postcss.config.mjs"
+      - "vite.config.js"
+      - "vite.config.mjs"
+      - "vite.config.ts"
+      - "babel.config.js"
+      - "babel.config.mjs"
+      - "babel.config.cjs"
+      - "tailwind.config.js"
+      - "tailwind.config.mjs"
+      - "tailwind.config.ts"
+      - "jest.config.js"
+      - "jest.config.mjs"
+      - "jest.config.ts"
+      - "webpack.config.js"
+      - "webpack.config.mjs"
+    patterns:
+      - id: rmcej_literal
+        description: "Known PolinRider mutex/marker string 'rmcej'"
+        type: literal
+        match: "rmcej"
+
+      - id: numeric_2857687
+        description: "Known PolinRider numeric constant 2857687"
+        type: literal
+        match: "2857687"
+
+      - id: numeric_2667686
+        description: "Known PolinRider numeric constant 2667686"
+        type: literal
+        match: "2667686"
+
+      - id: global_assign_regex
+        description: "Obfuscated global property assignment matching PolinRider pattern global[.(_V|!|_t)..] ="
+        type: regex
+        match: 'global\[.{0,2}(_V|!|_t).{0,3}\]='
+
+  - type: binary
+    glob:
+      - "*.woff"
+      - "*.woff2"
+      - "*.ttf"
+      - "*.otf"
+      - "*.eot"
+    patterns:
+      - id: rmcej_literal_bin
+        description: "Known PolinRider marker 'rmcej' found in font binary"
+        type: literal
+        match: "rmcej"
+
+      - id: numeric_2857687_bin
+        description: "Known PolinRider numeric constant 2857687 in font binary"
+        type: literal
+        match: "2857687"
+
+      - id: numeric_2667686_bin
+        description: "Known PolinRider numeric constant 2667686 in font binary"
+        type: literal
+        match: "2667686"
+
+      - id: global_assign_regex_bin
+        description: "Obfuscated global assignment in font binary (PolinRider pattern)"
+        type: regex
+        match: 'global\[.{0,2}(_V|!|_t).{0,3}\]='

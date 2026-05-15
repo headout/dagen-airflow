@@ -1,0 +1,71 @@
+id: generic-config-injection
+name: Generic Config Injection
+severity: MEDIUM
+enabled: true
+description: |
+  Detects patterns that are suspicious in any JavaScript/TypeScript build-config
+  file, regardless of the specific attack. Catches novel supply-chain attacks or
+  developer mistakes that introduce security risks. Build-config files are
+  executed at install/build/lint time by every contributor and CI runner, making
+  them a high-value target for attackers.
+
+file_targets:
+  - type: text
+    glob:
+      - "eslint.config.*"
+      - "next.config.*"
+      - "postcss.config.*"
+      - "vite.config.*"
+      - "babel.config.*"
+      - "tailwind.config.*"
+      - "jest.config.*"
+      - "webpack.config.*"
+      - "rollup.config.*"
+      - "svelte.config.*"
+      - "nuxt.config.*"
+    patterns:
+      - id: child_process
+        description: "require('child_process') — direct OS command execution from config"
+        type: regex
+        match: "require\\(['\"]child_process['\"]\\)"
+
+      - id: eval_call
+        description: "eval() call — dynamic code execution"
+        type: regex
+        match: "\\beval\\s*\\("
+
+      - id: new_function
+        description: "new Function() — dynamic code execution"
+        type: regex
+        match: "new\\s+Function\\s*\\("
+
+      - id: env_exfil
+        description: "JSON.stringify(process.env) — bulk environment variable exfiltration"
+        type: literal
+        match: "JSON.stringify(process.env)"
+
+      - id: base64_eval
+        description: "Base64 decode chained with eval — atob/Buffer.from payload delivery"
+        type: regex
+        match: "(atob|Buffer\\.from)\\s*\\([^)]+\\)[^;\\n]*eval"
+
+      - id: outbound_http
+        description: "Outbound HTTP/HTTPS call or network fetch from a config file"
+        type: regex
+        match: "\\b(fetch|axios|got|request)\\s*\\(|new\\s+(XMLHttpRequest|WebSocket)\\s*\\("
+
+      - id: ssh_key_path
+        description: "Reference to SSH private key path"
+        type: regex
+        match: "\\.ssh/(id_|[a-zA-Z0-9_]+_rsa|[a-zA-Z0-9_]+_ed25519|[a-zA-Z0-9_]+_ecdsa)"
+
+      - id: aws_access_key
+        description: "AWS access key ID pattern (AKIA...)"
+        type: regex
+        match: "AKIA[0-9A-Z]{16}"
+
+      - id: high_entropy
+        description: "High-entropy line (Shannon > 4.8 bits/char, len > 60) — possible obfuscated payload"
+        type: entropy
+        threshold: 4.8
+        min_length: 60

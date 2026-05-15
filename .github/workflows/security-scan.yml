@@ -1,0 +1,126 @@
+name: Security Scan — Supply-Chain Malware Detection
+
+# Runs on every PR (all branches).  Blocks merge if malware indicators are found
+# at or above FAIL_SEVERITY.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  # Minimum severity that fails the build.
+  # Override at the repo level via Settings → Secrets and variables → Actions.
+  # Valid values: CRITICAL | HIGH | MEDIUM | LOW | INFO
+  FAIL_SEVERITY: MEDIUM
+
+jobs:
+  supply-chain-scan:
+    name: Supply-Chain Malware Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout with full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # required to walk every commit in the PR
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: pip install pyyaml
+
+      - name: Install binutils (strings utility for binary scanning)
+        # Failure is non-fatal — scanner falls back to pure-Python strings extraction
+        run: sudo apt-get install -y --no-install-recommends binutils 2>/dev/null || true
+
+      # ─────────────────────────────────────────────────────────────────
+      # Core scan — loads all signatures from .github/security/signatures/
+      # and walks every commit + final file state of the PR.
+      # To add a new attack signature: drop a *.yml into that directory.
+      # ─────────────────────────────────────────────────────────────────
+      - name: Run signature-driven scanner
+        id: scan
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          FAIL_SEVERITY: ${{ env.FAIL_SEVERITY }}
+        # continue-on-error lets subsequent steps read outputs even when the
+        # scanner exits 1 (blocking findings).  The "Block merge" step below
+        # is what actually fails the workflow.
+        continue-on-error: true
+        run: python .github/security/scanner.py
+
+      # ─────────────────────────────────────────────────────────────────
+      # Post a clear, actionable PR comment so engineers know what to do.
+      # ─────────────────────────────────────────────────────────────────
+      - name: Post PR comment (findings detected)
+        if: steps.scan.outputs.found == 'true'
+        uses: actions/github-script@v7
+        env:
+          SCAN_REPORT: ${{ steps.scan.outputs.report }}
+          SCAN_SUMMARY: ${{ steps.scan.outputs.summary }}
+        with:
+          script: |
+            const tableRows = process.env.SCAN_REPORT || '(see workflow logs)';
+            const summary   = process.env.SCAN_SUMMARY || '';
+
+            const body = [
+              '## \u{1F6A8} Supply-Chain Malware Detected',
+              '',
+              '**This PR has been automatically blocked.** One or more files contain',
+              'known or suspicious indicators of a supply-chain attack.',
+              '',
+              `> ${summary}`,
+              '',
+              '> \u26D4 Do **NOT** merge, build, lint, or \`npm install\` from this branch.',
+              '',
+              '### Infected locations',
+              '',
+              '| Severity | File / commit | Signature | Pattern |',
+              '|---|---|---|---|',
+              tableRows,
+              '',
+              '### Remediation steps',
+              '1. **Identify** the compromised account that pushed these commits and revoke its GitHub access.',
+              '2. **Restore** each infected file from the last clean commit:',
+              '   ```sh',
+              '   git log --oneline -- <file>',
+              '   git show <clean-hash>:<file> > <file>',
+              '   ```',
+              '3. **Rotate all credentials** on any machine that ran `install`, `lint`, or `build` on this branch:',
+              '   - GitHub SSH keys \u2192 github.com/settings/keys',
+              '   - AWS IAM credentials \u2192 deactivate in IAM console, generate new',
+              '   - `.env` secrets across affected repos',
+              '   - npm tokens \u2192 check `~/.npmrc`, rotate at npmjs.com',
+              '   - Browser sessions \u2014 sign out everywhere',
+              '4. Open a **new clean PR** from a verified checkout.',
+              '',
+              '---',
+              '*Automated detection \u2014 to add or tune signatures see `.github/security/signatures/`*',
+            ].join('\n');
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo:  context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
+
+      # Explicit failure step so the PR check turns red and cannot be bypassed
+      - name: Block merge (findings detected)
+        if: steps.scan.outputs.found == 'true'
+        run: |
+          echo ""
+          echo "┌──────────────────────────────────────────────────┐"
+          echo "│  🚨  SECURITY ALERT — MERGE BLOCKED               │"
+          echo "│                                                    │"
+          echo "│  Supply-chain malware indicators found.            │"
+          echo "│  See the PR comment and workflow logs for details. │"
+          echo "└──────────────────────────────────────────────────┘"
+          exit 1
